@@ -1,7 +1,5 @@
 import numpy as np
-#from scipy.spatial import cKDTree as KDTree
 from pykdtree.kdtree import KDTree
-from numba import jit, prange
 
 
 def metric(weights, accuracy, alpha=0.5, threshold=0.2):
@@ -9,25 +7,22 @@ def metric(weights, accuracy, alpha=0.5, threshold=0.2):
     return alpha * accuracy + (1 - alpha) * reduction
 
 
-@jit(parallel=True)
 def knn_accuracy(X, Y):
     kdtree = KDTree(X)
     accuracy = 0
-    for index in prange(X.shape[0]):
+    for index in range(X.shape[0]):
         neighbour = kdtree.query(X[index].reshape(1, -1), k=2)[1][0][1]
         if Y[neighbour] == Y[index] and neighbour != index:
             accuracy += 1
     return accuracy / X.shape[0]
 
 
-@jit()
 def evaluate(weights, X, y):
     X_transformed = (X * weights)[:, weights > 0.2]
     acc = knn_accuracy(X_transformed, y)
     return metric(weights, acc)
 
 
-@jit()
 def local_search(X, y, max_neighbours, sigma, seed):
     n_features = X.shape[1]
     np.random.seed(seed)
