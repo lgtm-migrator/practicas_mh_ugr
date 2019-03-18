@@ -41,7 +41,7 @@ def pipeline(X, y, transformer, seed, make_trace, n_jobs=4):
     kfold = KFold(5, shuffle=True, random_state=seed)
     results = Parallel(n_jobs=n_jobs)(delayed(evaluate_partition)(
         X[train], y[train], X[test], y[test], transformer, make_trace)
-                                      for train, test in kfold.split(X))
+        for train, test in kfold.split(X))
     if len(results[0]) > 3:
         accuracies, times, reductions, traces = zip(*results)
     else:
@@ -98,12 +98,19 @@ def generate_graphics(filename, results, traces):
         plt.savefig('%s_trace.png' % filename)
 
 
+def create_directory(path):
+    import os
+    if not os.path.isdir(path):
+        os.mkdir(path)
+
+
 def main(dataset, algorithm, seed, trace, n_jobs, to_excel):
     df = pd.read_csv('../BIN/%s.csv' % dataset)
     X = df.iloc[:, 1:-1].values
     y = df.iloc[:, -1].values
     results, traces = evaluate_algorithm(algorithm, X, y, seed, trace, n_jobs)
     filename = 'output/%s_%s_%s' % (dataset, algorithm, seed)
+    create_directory('output')
     generate_graphics(filename, results, traces)
     output = pretty_print(dataset, algorithm, seed, results)
     if to_excel:
@@ -136,9 +143,7 @@ if __name__ == '__main__':
         default=1,
         help='Number of jobs to run in parallel for evaluating partitions.')
     parser.add_argument(
-        '--trace',
-        help='Generate trace for local search',
-        action='store_true')
+        '--trace', help='Generate trace for local search', action='store_true')
     parser.add_argument(
         '--to_excel', help='Dump results into xlsx file', action='store_true')
     args = vars(parser.parse_args())
