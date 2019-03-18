@@ -2,7 +2,7 @@ import timeit
 import argparse
 
 from joblib import Parallel, delayed, cpu_count
-from sklearn.preprocessing import minmax_scale
+from sklearn.preprocessing import minmax_scale, FunctionTransformer
 from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
@@ -19,12 +19,12 @@ def evaluate_partition(X_train, y_train, X_test, y_test, transformer,
     # Beginning of timing zone
     t_start = timeit.default_timer()
     transformer.fit(X_train, y_train)
-    t_stop = timeit.default_timer()
-    # End of timing zone
     X_train = transformer.transform(X_train)
     X_test = transformer.transform(X_test)
     knn = KNeighborsClassifier(n_neighbors=1)
     knn.fit(X_train, y_train)
+    # End of timing zone
+    t_stop = timeit.default_timer()
     # Gathering information
     accuracy = accuracy_score(knn.predict(X_test), y_test)
     time = t_stop - t_start
@@ -41,7 +41,7 @@ def pipeline(X, y, transformer, seed, make_trace, n_jobs=4):
     kfold = KFold(5, shuffle=True, random_state=seed)
     results = Parallel(n_jobs=n_jobs)(delayed(evaluate_partition)(
         X[train], y[train], X[test], y[test], transformer, make_trace)
-        for train, test in kfold.split(X))
+                                      for train, test in kfold.split(X))
     if len(results[0]) > 3:
         accuracies, times, reductions, traces = zip(*results)
     else:
@@ -64,6 +64,9 @@ def evaluate_algorithm(algorithm, X, Y, seed, make_trace, n_jobs):
         make_trace = False
     elif algorithm == 'local-search':
         transformer = LocalSearch(seed=seed)
+    else:
+        transformer = FunctionTransformer(lambda x: x, validate=False)
+        transformer.reduction = 0
     results = pipeline(X, Y, transformer, seed, make_trace, n_jobs)
     return create_dataframe(*results[:-1]), results[-1]
 
@@ -95,48 +98,48 @@ def generate_graphics(filename, results, traces):
         plt.savefig('%s_trace.png' % filename)
 
 
-def main(dataset, algorithm, seed, trace, n_jobs):
+def main(dataset, algorithm, seed, trace, n_jobs, to_excel):
     df = pd.read_csv('../BIN/%s.csv' % dataset)
-    X = df.iloc[:, :-1].values
+    X = df.iloc[:, 1:-1].values
     y = df.iloc[:, -1].values
     results, traces = evaluate_algorithm(algorithm, X, y, seed, trace, n_jobs)
     filename = 'output/%s_%s_%s' % (dataset, algorithm, seed)
     generate_graphics(filename, results, traces)
     output = pretty_print(dataset, algorithm, seed, results)
+    if to_excel:
+        results.to_excel(filename + '.xlsx')
     print(output)
 
 
 DATASETS = ['colposcopy', 'texture', 'ionosphere']
-ALGORITHMS = ['relief', 'local-search']
+ALGORITHMS = ['relief', 'local-search', 'knn']
 N_JOBS_RANGE = list(range(1, min(4, cpu_count()) + 1))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
-    optional = parser.add_argument_group('optional arguments')
-    required.add_argument('--dataset', type=str, choices=DATASETS, required=True)
-    required.add_argument(
-        '--algorithm',
+    parser.add_argument('dataset', type=str, choices=DATASETS)
+    parser.add_argument(
+        'algorithm',
         type=str,
         choices=ALGORITHMS,
-        required=True,
         help='Algorithm to use for feature weighting')
-    required.add_argument('--seed', type=int, required=True)
-    optional.add_argument(
-        '--trace',
-        type=bool,
-        choices=[True, False],
-        required=False,
-        default=False,
-        help='Generate trace for local search?')
-    optional.add_argument(
+    parser.add_argument(
+        '--seed',
+        type=int,
+        default=77766814,
+        help='Seed to initialize the random generator')
+    parser.add_argument(
         '--n_jobs',
         type=int,
         choices=N_JOBS_RANGE,
-        required=False,
         default=1,
         help='Number of jobs to run in parallel for evaluating partitions.')
+    parser.add_argument(
+        '--trace',
+        help='Generate trace for local search',
+        action='store_true')
+    parser.add_argument(
+        '--to_excel', help='Dump results into xlsx file', action='store_true')
     args = vars(parser.parse_args())
     main(**args)

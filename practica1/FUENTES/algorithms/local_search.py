@@ -2,12 +2,12 @@ import numpy as np
 from pykdtree.kdtree import KDTree
 
 
-def metric(weights, accuracy, alpha=0.5, threshold=0.2):
+def fitness(weights, accuracy, alpha=0.5, threshold=0.2):
     reduction = np.sum(weights < threshold) / len(weights)
     return alpha * accuracy + (1 - alpha) * reduction
 
 
-def knn_accuracy(X, Y):
+def knn_accuracy_leave_one_out(X, Y):
     kdtree = KDTree(X)
     accuracy = 0
     for index in range(X.shape[0]):
@@ -19,28 +19,28 @@ def knn_accuracy(X, Y):
 
 def evaluate(weights, X, y):
     X_transformed = (X * weights)[:, weights > 0.2]
-    acc = knn_accuracy(X_transformed, y)
-    return metric(weights, acc)
+    acc = knn_accuracy_leave_one_out(X_transformed, y)
+    return fitness(weights, acc)
 
 
 def local_search(X, y, max_neighbours, sigma, seed):
     n_features = X.shape[1]
     np.random.seed(seed)
     weights = np.random.rand(n_features)
-    goodness = evaluate(weights, X, y)
+    fitness = evaluate(weights, X, y)
     trace = np.zeros(max_neighbours)
     n_generated = 0
     last_improvement = 0
     while n_generated < max_neighbours:
-        trace[n_generated] = goodness
+        trace[n_generated] = fitness
         w_prime = np.copy(weights)
         for k in np.random.permutation(n_features):
             n_generated += 1
             w_prime[k] = np.clip(w_prime[k] + np.random.randn() * sigma, 0, 1)
-            g = evaluate(w_prime, X, y)
-            if goodness < g:
+            f = evaluate(w_prime, X, y)
+            if fitness < f:
                 weights = w_prime
-                goodness = g
+                fitness = f
                 last_improvement = n_generated
                 break
             diff = n_generated - last_improvement

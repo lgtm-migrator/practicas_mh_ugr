@@ -1,0 +1,16 @@
+- BIN: Únicamente contiene los datasets y la tabla excel rellena. Esta última
+también est adjunta en la memoria.
+
+- FUENTES: Este directorio contiene tanto el ejecutable como el resto de códigos fuente.
+El lenguaje de programación usado es Python3 y por comodida el programa principal
+también se ha almacenado en este directorio.
+      - practica1.py : Programa a ejecutar (main)
+      - algoritmos/* : Los diferentes algoritmos implementados. Un fichero por algoritmo.
+      - output/*     : Aquí se almacena las salidas de las diferentes ejecuciones.
+      - requirements.txt : Fichero con todas las dependencias a instalar. No se tiene
+      que utilizar, a no ser que haya algún error con alguna dependencia.
+      - install.sh   : Script instalador de dependencias. Crea un entorno virtual
+      y descarga todas las dependencias. Este es el único fichero que hay que ejecutar
+      antes de poder utilizar la aplicación. Nota: No recibe argumentos.
+
+- practica1.pdf: La memoria.
