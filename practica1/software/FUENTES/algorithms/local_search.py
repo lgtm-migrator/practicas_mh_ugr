@@ -1,13 +1,24 @@
 import numpy as np
-from pykdtree.kdtree import KDTree
 
-
-def fitness(weights, accuracy, alpha=0.5, threshold=0.2):
-    reduction = np.sum(weights < threshold) / len(weights)
-    return alpha * accuracy + (1 - alpha) * reduction
+"""
+In order to use the module pykdtree the system must have
+OpenMP support. If there is any problem during the installation
+process, we can use instead the KDTree implementation from
+scipy.spatial module.
+"""
+try:
+    from pykdtree.kdtree import KDTree
+except ImportError:
+    from scipy.spatial import cKDTree as KDTree
 
 
 def knn_accuracy_leave_one_out(X, Y):
+    """Calculate the accuracy of a 1-NN classifier using Leave-One-Out validation
+
+    Keyword arguments:
+    X -- Train input
+    Y -- Train labels
+    """
     kdtree = KDTree(X)
     accuracy = 0
     for index in range(X.shape[0]):
@@ -18,12 +29,31 @@ def knn_accuracy_leave_one_out(X, Y):
 
 
 def evaluate(weights, X, y):
+    """Evaluate a solution transforming the input data
+    and calculatig the accuracy.
+
+    Returns:
+        the fitness value for the specified weights based on
+        the input and labels data.
+    """
     X_transformed = (X * weights)[:, weights > 0.2]
     acc = knn_accuracy_leave_one_out(X_transformed, y)
-    return fitness(weights, acc)
+    reduction = np.sum(weights < 0.2) / len(weights)
+    return (acc + reduction) / 2
 
 
 def local_search(X, y, max_neighbours, sigma, seed):
+    """Local Search Algorithm
+
+    Keyword arguments:
+    X -- Train input
+    y -- Train labels
+    max_neighbours -- Max number of neighbours to explore.
+    sigma -- Standard deviation of Gaussian mutation.
+    seed -- Seed to initialize the random generator.
+            It is recommended to specify this in order to replicate
+            the experiment across executions.
+    """
     n_features = X.shape[1]
     np.random.seed(seed)
     weights = np.random.rand(n_features)
@@ -51,7 +81,8 @@ def local_search(X, y, max_neighbours, sigma, seed):
 
 class LocalSearch():
     """
-    Docstring: TODO
+    Docstring: Wrapper class for Local Search algorithm that provided
+    sklearn-based syntax.
     """
 
     def __init__(self, threshold=0.2, max_neighbours=15000, sigma=0.3, seed=1):
@@ -73,9 +104,9 @@ class LocalSearch():
         self.reduction /= len(self.feature_importances)
 
     def transform(self, X):
-        return (X * self.feature_importances)[:, self.feature_importances > self.threshold]
+        return (X * self.feature_importances
+                )[:, self.feature_importances > self.threshold]
 
     def fit_transform(self, X, y):
         self.fit(X, y)
         return self.transform(X)
-

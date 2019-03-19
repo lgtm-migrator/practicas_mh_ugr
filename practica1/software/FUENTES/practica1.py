@@ -84,6 +84,9 @@ def pretty_print(dataset, algorithm, seed, results):
 
 
 def generate_graphics(filename, results, traces):
+    """Generates some bloxplots based on the parameter --results--
+    and save it on a file. Optionally, it creates a trace line plot.
+    """
     _, axes = plt.subplots(2, len(results.columns) // 2, figsize=(10, 6))
     plt.suptitle('Algorithm Results', fontsize='x-large')
     for col, axis in zip(results.columns, axes.flatten()):
@@ -99,6 +102,7 @@ def generate_graphics(filename, results, traces):
 
 
 def create_directory(path):
+    """Creates a directory if it doesn't exist."""
     import os
     if not os.path.isdir(path):
         os.mkdir(path)

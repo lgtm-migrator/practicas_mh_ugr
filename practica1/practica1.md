@@ -343,7 +343,12 @@ A efectos prácticos, hay que ejecutar únicamente lo siguiente:
 
 ```{.bash caption="Ejecución del script para instalar las dependencias"}
 ./FUENTES/install.sh
+source ./env/bin/activate
 ```
+
+> **Nota:** Si se produce un error al instalar el módulo pykdtree es porque su compilador
+por defecto no soporta OpenMP. Este error se puede obviar ya que la aplicación usará
+otro módulo en su lugar.
 
 Una vez instalado todo, ya se puede utilizar el programa principal. Este programa
 tiene varios parámetros que se deben especificar: el conjunto de datos,
