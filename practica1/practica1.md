@@ -224,7 +224,7 @@ function local_search(X, y, max_neighbours, sigma, seed):
                 last_improvement = n_generated
                 break
             diff = n_generated - last_improvement
-            if n_generated > max_neighbours or diff > (20 * n_features): 
+            if n_generated > max_neighbours or diff > (20 * n_features):
                 return weights
     return weights
 ```
@@ -403,6 +403,12 @@ es el siguiente:
 
 ![](./img/trace.png)
 
+Además, la aplicación puede leer cualquier archivo **csv**. En el parámetro
+dataset únicamente hay que especificar el path del archivo, el único requisito
+es que la variable a predecir se encuentre en la última columna. Esta variable
+no hace falta que esté codificada en enteros, puede ser cualquier variable categórica,
+el sistema se encarga de codificarla.
+
 
 # Experimentos y Análisis de resultados
 
@@ -425,9 +431,9 @@ muestras y 40 atributos. En este caso la clasificación es entre 11 categorías 
 ## Resultados obtenidos
 
 Para realizar los experimentos se utilizado una semilla específica, mi DNI: 77766814.
-La semilla se ha utilizado tanto para los algoritmos probabilísticos como para crear 
-las particiones k-fold del conjunto de datos. La funcionalidad de ejecutar la validación 
-en paralelo está implementada y funciona correctamente, pero se ha utilizado un único 
+La semilla se ha utilizado tanto para los algoritmos probabilísticos como para crear
+las particiones k-fold del conjunto de datos. La funcionalidad de ejecutar la validación
+en paralelo está implementada y funciona correctamente, pero se ha utilizado un único
 proceso para evaluar todas las particiones y así, obtener tiempos mínimos de cada algoritmo.
 Los resultados de la ejecución de los algoritmos son los siguientes:
 
@@ -441,7 +447,7 @@ Los resultados de la ejecución de los algoritmos son los siguientes:
 Antes de continuar con el análisis de los resultados es importante mencionar que las muestras
 recogidas, pese a haberse obtenido en las mismas condiciones (misma semilla), son bastante
 pequeñas. Se han realizado únicamente 5 particiones por conjunto de datos, lo que nos da
-una muestra demasiado pequeña que nos impide realizar cualquier test de hipótesis 
+una muestra demasiado pequeña que nos impide realizar cualquier test de hipótesis
 paramétrico. Incluso si realizásemos un test no paramétrico como el test Anderson-Darling,
 las conclusiones podrían no ser correctas y podríamos cometer errores de Tipo I o Tipo 2
 (falsos positivos o falsos negativos).
@@ -453,29 +459,30 @@ resultados para entender que algoritmos funcionan mejor sobre nuestros conjuntos
 específicos y sus particiones correspondientes.
 
 En primer lugar, vemos que el algoritmo 1-NN básico aporta un porcentaje de precisión alto
-en los casos *Ionosphere* y *Texture* y un porcentaje no tan alto en el conjunto 
+en los casos *Ionosphere* y *Texture* y un porcentaje no tan alto en el conjunto
 *Colposcopy*. Si bien la métrica de la precisión puede ser válida en *Texture*, para
 los otros dos conjuntos puede no funcionar tan bien. Lo ideal sería utilizar
 alguna otra métrica como AUC, F1-Score, etc. Pero como nuestro objetivo es comparar
 diferentes algoritmos que utilizan la misma métrica, este detalle no es relevante.
 
 
-Para el caso *Colposcopy* vemos que el clasificador básico tiene una precisión mayor
-que las versiones Relief y Búsqueda Local. Para el algoritmo Relief, poco hay que
-añadir, en ese conjunto a priori no funciona bien. Pero el algoritmo BL si que es importante
-recalcar una cosa. La diferencia de precision entre 1-NN y BL es de tan solo 1,76% .
-Es decir, hemos perdido menos de un 2% de precisión usando únicamente el 35% de las
+Para el caso *Colposcopy* vemos que el clasificador básico tiene una precisión muy
+próxima a las versiones Relief y Búsqueda Local. Incluso una precisión mayor que este
+último. Para el algoritmo Relief, poco hay que añadir, en ese conjunto a priori no
+funciona bien, la mejora es prácticamente nula. Pero el algoritmo BL si que es importante
+recalcar una cosa. La diferencia de precision entre 1-NN y BL es de tan solo 3% .
+Es decir, hemos perdido un 3% de precisión usando únicamente el 30% de las
 características. Esto implica que nuestro algoritmo posiblemente vaya a generalizar
 mucho mejor que el clasificador 1-NN y el coste computacional de predecir nuevos
 valores se va a reducir drásticamente. El inconveniente principal de este algoritmo
 en este conjunto de datos (y en general), es el tiempo de preprocesado. Para obtener
-los pesos correspondientes tarda de media ~75s lo cuál es inmensamente mayor que los
+los pesos correspondientes tarda de media ~78s lo cuál es inmensamente mayor que los
 otros dos algoritmos comparados.
 
 Lo importante de los algoritmos de APC que estamos implementado es que una vez calculado
 los pesos óptimos para un conjunto de datos, se validan, y quedan prefijados para el resto
 del desarrollo. Esto hace que en fases posteriores, realizar predicciones sea mucho más
-eficiente. Si nos fijamos, se consigue más de un 70% de reducción de media entre los tres
+eficiente. Si nos fijamos, se consigue más de un 75% de reducción de media entre los tres
 conjuntos de datos. Por otra parte, si nuestro objetivo es la inferencia, podemos saber
 que características tienen más importancia que otras cuando nos enfrentamos a algoritmos
 de aprendizaje "black-box", los cuales son difíciles de interpretar, pero con estos métodos
@@ -484,14 +491,16 @@ tiempos de ejecución del algoritmo BL no deben ser limitantes a la hora de usar
 parte de un flujo de trabajo en Aprendizaje Automático.
 
 
+
 Algo similar pasa con el resto de casos. El algoritmo Relief esta vez si que mejora
 la precisión con respecto al 1-NN. Ahora si podemos decir que este algoritmo funciona
 correctamente para estos casos particulares. Cumple su objetivo que es maximizar el
 rendimiento del modelo ponderando pero sin reducir las características. Por otra parte,
-la búsqueda local incluso mejora la precisión en el caso *Ionosphere*, posiblemente
-debido a la reducción de la varianza en el modelo; aunque se queda un poco por detrás
-en *Texture*. Donde la diferencias son un poco mayor que el resto de casos pero los tres
-algoritmos tienen una precisión bastante alta.
+la búsqueda local podríamos decir que es el algoritmo que menor precisión tiene.
+Esto es debido a que la función fitness pondera por igual la reducción y la precisión
+por tanto la precisión se me un poco mermada. Aun así, como hemos comentado antes,
+la diferencia en precisión entre Búsqueda local y el resto de algoritmos no es demasiado
+grande mientras que la reducción es considerable.
 
 ## Gráficos
 
@@ -520,8 +529,8 @@ Podemos también comparar los algoritmos a partir de los datos recogidos de form
 Estos gráficos reflejan la relevancia de las particiones en los conjuntos de datos.
 Para el algoritmo básico, las muestras de precisión están siempre en el rango intercuartílico
 incluso para *Ionosphere* los datos son simétricos. Mientras que para los algoritmos Relief
-y Búsqueda local existen dos casos donde hay outliers. Para Relief, esto es debido a 
-la naturaleza greedy del algoritmo y para búsqueda local esto es debido a lo comentado 
+y Búsqueda local existen dos casos donde hay outliers. Para Relief, esto es debido a
+la naturaleza greedy del algoritmo y para búsqueda local esto es debido a lo comentado
 anteriormente sobre convergencia. Cada partición de datos genera un función fitness con
 una geometría distinta, por tanto un búsqueda local puede hacer que lleguemos
 a puntos máximos totalmente distintos en cada caso. A modo de resumen, podríamos decir
@@ -536,7 +545,7 @@ de datos que el clasificador 1-NN básico.
 ## Entendimiento
 
 Al principio, pese a lo básico del algoritmo, no llegaba a comprender como funcionaba
-realmente Relief. Este paper me fue de gran ayuda: 
+realmente Relief. Este paper me fue de gran ayuda:
 
 [RELIEF Algorithm and Similarity Learning for K-NN](
 https://www.academia.edu/2675771/RELIEF_Algorithm_and_Similarity_Learning_for_k-NN)

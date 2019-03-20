@@ -1,9 +1,10 @@
+import os
 import timeit
 import argparse
 
 from joblib import Parallel, delayed, cpu_count
-from sklearn.preprocessing import minmax_scale, FunctionTransformer
-from sklearn.model_selection import KFold
+from sklearn.preprocessing import minmax_scale, FunctionTransformer, LabelEncoder
+from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 import pandas as pd
@@ -12,6 +13,11 @@ import matplotlib.pyplot as plt
 
 from algorithms.relief import Relief
 from algorithms.local_search import LocalSearch
+
+# TODO: Inicializar pesos para LS con Greedy.
+# TODO: Modificar alpha.
+# TODO: Usar otra métrica
+# TODO: Bootstrapping
 
 
 def evaluate_partition(X_train, y_train, X_test, y_test, transformer,
@@ -38,10 +44,10 @@ def evaluate_partition(X_train, y_train, X_test, y_test, transformer,
 
 def pipeline(X, y, transformer, seed, make_trace, n_jobs=4):
     X = minmax_scale(X)
-    kfold = KFold(5, shuffle=True, random_state=seed)
+    kfold = StratifiedKFold(5, shuffle=True, random_state=seed)
     results = Parallel(n_jobs=n_jobs)(delayed(evaluate_partition)(
         X[train], y[train], X[test], y[test], transformer, make_trace)
-        for train, test in kfold.split(X))
+        for train, test in kfold.split(X, y))
     if len(results[0]) > 3:
         accuracies, times, reductions, traces = zip(*results)
     else:
@@ -65,6 +71,7 @@ def evaluate_algorithm(algorithm, X, Y, seed, make_trace, n_jobs):
     elif algorithm == 'local-search':
         transformer = LocalSearch(seed=seed)
     else:
+        make_trace = False
         transformer = FunctionTransformer(lambda x: x, validate=False)
         transformer.reduction = 0
     results = pipeline(X, Y, transformer, seed, make_trace, n_jobs)
@@ -103,18 +110,33 @@ def generate_graphics(filename, results, traces):
 
 def create_directory(path):
     """Creates a directory if it doesn't exist."""
-    import os
     if not os.path.isdir(path):
-        os.mkdir(path)
+        os.makedirs(path, exist_ok=True)
+
+
+def load_dataset(dataset):
+    df = None
+    if dataset in DATASETS:
+        df = pd.read_csv('../BIN/%s.csv' % dataset)
+    elif dataset.endswith('.csv'):
+        df = pd.read_csv(dataset)
+    X = df.iloc[:, :-1].values
+    y = df.iloc[:, -1].values
+    y = LabelEncoder().fit_transform(y)
+    return X, y
+
+
+def get_filename(filepath):
+    base = os.path.basename(filepath)
+    return os.path.splitext(base)[0]
 
 
 def main(dataset, algorithm, seed, trace, n_jobs, to_excel):
-    df = pd.read_csv('../BIN/%s.csv' % dataset)
-    X = df.iloc[:, 1:-1].values
-    y = df.iloc[:, -1].values
+    X, y = load_dataset(dataset)
+    dataset = get_filename(dataset)
     results, traces = evaluate_algorithm(algorithm, X, y, seed, trace, n_jobs)
-    filename = 'output/%s_%s_%s' % (dataset, algorithm, seed)
-    create_directory('output')
+    filename = 'output/%s/%s_%s' % (algorithm, dataset, seed)
+    create_directory('output/%s/' % algorithm)
     generate_graphics(filename, results, traces)
     output = pretty_print(dataset, algorithm, seed, results)
     if to_excel:
@@ -129,7 +151,8 @@ N_JOBS_RANGE = list(range(1, min(4, cpu_count()) + 1))
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('dataset', type=str, choices=DATASETS)
+    parser.add_argument(
+        'dataset', type=str, help='Predefined datasets or a csv file')
     parser.add_argument(
         'algorithm',
         type=str,

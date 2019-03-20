@@ -37,9 +37,8 @@ class Relief():
     sklearn-based syntax.
     """
 
-    def __init__(self, threshold=0.2):
+    def __init__(self):
         self.feature_importances = []
-        self.threshold = threshold
         self.reduction = 0
 
     def fit(self, X, Y):
