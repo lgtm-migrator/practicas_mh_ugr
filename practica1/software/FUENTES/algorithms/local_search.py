@@ -21,14 +21,9 @@ def evaluate(weights, X, y):
     """
     X_transformed = (X * weights)[:, weights > 0.2]
     kdtree = KDTree(X_transformed)
-    accuracy = 0
-    m = len(X)
-    for index in range(m):
-        neighbour = kdtree.query(X_transformed[index].reshape(1, -1), k=2)[1][0][1]
-        if y[neighbour] == y[index]:
-            accuracy += 1
-    accuracy /= m
-    reduction = np.sum(weights < 0.2) / len(weights)
+    neighbours = kdtree.query(X_transformed, k=2)[1][:, 1]
+    accuracy = np.mean(y[neighbours] == y)
+    reduction = np.mean(weights < 0.2)
     return (accuracy + reduction) / 2
 
 
@@ -57,13 +52,16 @@ def local_search(X, y, max_neighbours, sigma, seed):
         for k in np.random.permutation(n_features):
             n_generated += 1
             no_improvement += 1
-            w_prime[k] = np.clip(w_prime[k] + np.random.normal(0, sigma), 0, 1)
+            last_state = w_prime[k]
+            w_prime[k] = np.clip(last_state + np.random.normal(0, sigma), 0, 1)
             f = evaluate(w_prime, X, y)
             if fitness < f:
                 weights = w_prime
                 fitness = f
                 no_improvement = 0
                 break
+            else:
+                w_prime[k] = last_state
             if n_generated > max_neighbours or no_improvement >= (20 * n_features):
                 return weights, trace[trace > 0], n_generated
     return weights, trace[trace > 0], n_generated

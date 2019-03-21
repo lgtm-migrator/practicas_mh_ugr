@@ -58,7 +58,7 @@ $$f(\vec{w}) = \alpha \times precision(\vec{w}, X) + (1 - \alpha) \times reducci
 Donde:
 $$
 reduccion(\vec{w}) = \frac{\text{nº de componentes < umbral}}{\text{nº de componentes total}}$$
-$$precisión(\vec{w}, X) = \frac{\text{predicciones correctas ponderando con } \vec{w}}{\text{predicciones totales}}$$
+$$precision(\vec{w}, X) = \frac{\text{predicciones correctas ponderando con } \vec{w}}{\text{predicciones totales}}$$
 
 Para reducir el coste computacional de los algoritmos, vamos a utilizar el clasificador
 KNN más sencillo usando un solo vecino. Por tanto, para hacer una predicción basta con
@@ -215,7 +215,8 @@ function local_search(X, y, max_neighbours, sigma, seed):
         w_prime = copy(weights)
         for k in permutation(n_features):
             n_generated += 1
-            w_prime[k] = w_prime[k] + generate_gaussian(0, sigma)
+            last_state = w_prime[k]
+            w_prime[k] += generate_gaussian(0, sigma)
             w_prime = clip(w_prime)
             f = evaluate(w_prime, X, y)
             if fitness < f then
@@ -223,6 +224,8 @@ function local_search(X, y, max_neighbours, sigma, seed):
                 fitness = f
                 last_improvement = n_generated
                 break
+            else then
+              w_prime[k] = last_state
             diff = n_generated - last_improvement
             if n_generated > max_neighbours or diff > (20 * n_features):
                 return weights
@@ -294,7 +297,7 @@ oficial de Python y los diferentes paquetes utilizados.
 
 Con el fin de reutilizar todo el código posible, he hecho uso extensivo de la
 biblioteca de cálculo numérico y manejo de arrays **Numpy**. Esto ha permitido
-tener una implementación limpia y concisa (~270 lineas totales) con una velocidad
+tener una implementación limpia y concisa (~300 lineas totales) con una velocidad
 de ejecución aceptable en comparación con otros lenguajes como C.
 
 También he utilizado algunos **profilers** tanto a nivel de función como a nivel de línea,
@@ -311,14 +314,16 @@ mejoras que ofrecían no justificaban la complicación en cuanto a desarrollo y 
 del proyecto.
 
 Finalmente, una vez desarrollado ambos algoritmos, se envolvieron en una clase con
-una interfaz similar a los objetos de Scikit-Learn para permitir una integración sencilla con el
-resto del código. Con estas dos clases, ya se implementó el programa principal.
+una interfaz similar a los objetos de Scikit-Learn para permitir una integración 
+sencilla con el resto del código. Con estas dos clases, ya se implementó el 
+programa principal.
 
 El programa principal (*practica1.py*) tiene varias funcionalidades interesantes.
 La primera de ellas es la **validación en paralelo** de los clasificadores y salida
 bien formateada de los resultados. El programa una vez obtenidos los resultados
 genera unos gráficos en formato PNG que se almacenan en la carpeta **output**.
-El programa también ofrece una validación de los argumentos recibidos, así como
+Los resultados se pueden también exportar en formato "xslx" de Excel.
+El programa ofrece una validación de los argumentos recibidos, así como
 una página de ayuda.
 
 
@@ -377,24 +382,27 @@ Así, si queremos ejecutar el algoritmo de Búsqueda Local con el conjunto de da
 Colposcopy, la semilla 1, y en paralelo, ejecutaríamos lo siguiente:
 
 ```{caption="Salida del programa principal"}
+
 python3 practica1.py colposcopy local-search --seed=1 --n_jobs=4
 
- ========================================================
-     COLPOSCOPY     |     LOCAL-SEARCH      |  SEED = 1
- ========================================================
-              Accuracy  Reduction  Aggregation        Time
- Partition 1  0.655172   0.682540     0.668856  114.770150
- Partition 2  0.793103   0.746032     0.769568  182.226361
- Partition 3  0.789474   0.587302     0.688388  166.377363
- Partition 4  0.789474   0.603175     0.696324  104.018618
- Partition 5  0.754386   0.698413     0.726399   89.622522
+=======================================================
+    COLPOSCOPY     |     LOCAL-SEARCH      |  SEED = 1
+=======================================================
+             Accuracy  Reduction  Aggregation      Time
+Partition 1  0.745763   0.774194     0.759978  4.893794
+Partition 2  0.754386   0.838710     0.796548  4.396733
+Partition 3  0.736842   0.677419     0.707131  4.629782
+Partition 4  0.754386   0.854839     0.804612  4.111064
+Partition 5  0.771930   0.822581     0.797255  3.826707
 
-          Accuracy  Reduction  Aggregation        Time
- Mean     0.756322   0.663492     0.709907  131.403003
- Std.Dev  0.058707   0.066780     0.039256   40.553621
- Median   0.789474   0.682540     0.696324  114.770150
-
+         Accuracy  Reduction  Aggregation      Time
+Mean     0.752661   0.793548     0.773105  4.371616
+Std.Dev  0.012991   0.071588     0.040775  0.419751
+Median   0.754386   0.822581     0.796548  4.396733
 ```
+
+> **NOTA:** La semilla por defecto es 77766814. Es la semilla utilizada para el
+análisis de resultados.
 
 El parámetro *--trace* es muy interesante ya que puesto a True, permite generar
 un gráfico de como varía la función fitness a lo largo de las iteraciones.
@@ -403,8 +411,8 @@ es el siguiente:
 
 ![](./img/trace.png)
 
-Además, la aplicación puede leer cualquier archivo **csv**. En el parámetro
-dataset únicamente hay que especificar el path del archivo, el único requisito
+Además, la aplicación puede leer cualquier archivo **csv**, en el parámetro
+dataset únicamente hay que especificar el path del archivo. El único requisito
 es que la variable a predecir se encuentre en la última columna. Esta variable
 no hace falta que esté codificada en enteros, puede ser cualquier variable categórica,
 el sistema se encarga de codificarla.
@@ -436,7 +444,6 @@ las particiones k-fold del conjunto de datos. La funcionalidad de ejecutar la va
 en paralelo está implementada y funciona correctamente, pero se ha utilizado un único
 proceso para evaluar todas las particiones y así, obtener tiempos mínimos de cada algoritmo.
 Los resultados de la ejecución de los algoritmos son los siguientes:
-
 
 
 ![](./img/tables.pdf)
@@ -471,25 +478,26 @@ próxima a las versiones Relief y Búsqueda Local. Incluso una precisión mayor 
 último. Para el algoritmo Relief, poco hay que añadir, en ese conjunto a priori no
 funciona bien, la mejora es prácticamente nula. Pero el algoritmo BL si que es importante
 recalcar una cosa. La diferencia de precision entre 1-NN y BL es de tan solo 3% .
-Es decir, hemos perdido un 3% de precisión usando únicamente el 30% de las
+Es decir, hemos perdido un 3% de precisión usando únicamente el 23% de las
 características. Esto implica que nuestro algoritmo posiblemente vaya a generalizar
 mucho mejor que el clasificador 1-NN y el coste computacional de predecir nuevos
 valores se va a reducir drásticamente. El inconveniente principal de este algoritmo
 en este conjunto de datos (y en general), es el tiempo de preprocesado. Para obtener
-los pesos correspondientes tarda de media ~78s lo cuál es inmensamente mayor que los
-otros dos algoritmos comparados.
+los pesos correspondientes tarda de media ~8s, lo cuál es bastante mayor que los
+otros dos algoritmos comparados aunque no es un tiempo desmesurado.
+
 
 Lo importante de los algoritmos de APC que estamos implementado es que una vez calculado
 los pesos óptimos para un conjunto de datos, se validan, y quedan prefijados para el resto
 del desarrollo. Esto hace que en fases posteriores, realizar predicciones sea mucho más
-eficiente. Si nos fijamos, se consigue más de un 75% de reducción de media entre los tres
+eficiente. Si nos fijamos, se consigue más de un 82% de reducción de media entre los tres
 conjuntos de datos. Por otra parte, si nuestro objetivo es la inferencia, podemos saber
 que características tienen más importancia que otras cuando nos enfrentamos a algoritmos
 de aprendizaje "black-box", los cuales son difíciles de interpretar, pero con estos métodos
 podemos desentrañar parte de la información que aprenden. Por estos motivos, los altos
-tiempos de ejecución del algoritmo BL no deben ser limitantes a la hora de usarlo como
+tiempos de ejecución del algoritmo BL, los cuáles en realidad no son tan altos comparados
+con técnicas como hyperparametrización, no deben ser limitantes a la hora de usarlo como
 parte de un flujo de trabajo en Aprendizaje Automático.
-
 
 
 Algo similar pasa con el resto de casos. El algoritmo Relief esta vez si que mejora
@@ -501,6 +509,15 @@ Esto es debido a que la función fitness pondera por igual la reducción y la pr
 por tanto la precisión se me un poco mermada. Aun así, como hemos comentado antes,
 la diferencia en precisión entre Búsqueda local y el resto de algoritmos no es demasiado
 grande mientras que la reducción es considerable.
+
+
+>**Nota**: Cuando hablamos de que la diferencia entre precisiones no es demasiado grande,
+hablamos para estos conjuntos en particular y sin conocimiento previo de la utilización
+del modelo. En situaciones donde la precisión sea muy importante, como puede ser en 
+evaluaciones médicas, detección de fraude, etc...
+Si que tendríamos que tener en cuenta estas diferencias. En estos casos, deberíamos
+ajustar el parámetro $\alpha$ para ponderar más la precisión, por ejemplo $\alpha=0.75$.
+
 
 ## Gráficos
 

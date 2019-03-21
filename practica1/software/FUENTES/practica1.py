@@ -7,17 +7,15 @@ from sklearn.preprocessing import minmax_scale, FunctionTransformer, LabelEncode
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
+
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from algorithms.relief import Relief
 from algorithms.local_search import LocalSearch
-
-# TODO: Inicializar pesos para LS con Greedy.
-# TODO: Modificar alpha.
-# TODO: Usar otra métrica
-# TODO: Bootstrapping
 
 
 def evaluate_partition(X_train, y_train, X_test, y_test, transformer,
