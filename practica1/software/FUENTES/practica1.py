@@ -166,7 +166,7 @@ if __name__ == '__main__':
         type=int,
         choices=N_JOBS_RANGE,
         default=1,
-        help='Number of jobs to run in parallel for evaluating partitions.')
+        help='Number of jobs to run in parallel to evaluate partitions.')
     parser.add_argument(
         '--trace', help='Generate trace for local search', action='store_true')
     parser.add_argument(

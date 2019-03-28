@@ -1,5 +1,4 @@
 import numpy as np
-
 """
 In order to use the module pykdtree the system must have
 OpenMP support. If there is any problem during the installation
@@ -37,17 +36,19 @@ class Relief():
     sklearn-based syntax.
     """
 
-    def __init__(self):
+    def __init__(self, threshold=0.2):
         self.feature_importances = []
         self.reduction = 0
+        self.threshold = threshold
 
     def fit(self, X, Y):
         self.feature_importances = _relief(X, Y)
+        self.reduction = np.sum(self.feature_importances < self.threshold)
+        self.reduction /= len(self.feature_importances)
 
     def transform(self, X):
-        if not np.any(self.feature_importances):
-            return X
-        return X * self.feature_importances
+        return (X * self.feature_importances
+                )[:, self.feature_importances > self.threshold]
 
     def fit_transform(self, X, y):
         self.fit(X, y)

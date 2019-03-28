@@ -1,6 +1,7 @@
 ---
 title: Práctica 1. Aprendizaje de Pesos en Características (APC)
-author: ["Antonio Molner Domenech", "DNI: 77766814L", "Grupo MH3: Jueves de 17:30h a 19:30h"]
+author: ["Antonio Molner Domenech", "DNI: 77766814L",
+         "Grupo MH3: Jueves de 17:30h a 19:30h", "antoniomolner@correo.ugr.es"]
 lang: es
 geometry: margin=3cm
 toc: True
@@ -363,19 +364,23 @@ En cualquier momento podemos acceder a la ayuda con **-h**.
 ```{.bash caption="Salida de la página de ayuda"}
 python3 practica1.py -h
 
-usage: practica1.py [-h] [--seed SEED] [--trace {True,False}]
-                    [--n_jobs {1,2,3,4}]
-                    {colposcopy,texture,ionosphere} {relief,local-search}
+usage: practica1.py [-h] [--seed SEED] [--n_jobs {1,2,3,4}] [--trace]
+                    [--to_excel]
+                    dataset {relief,local-search,knn}
 
 positional arguments:
-  {colposcopy,texture,ionosphere}
-  {relief,local-search} Algorithm to use for feature weighting
+  dataset               Predefined datasets or a csv file
+  {relief,local-search,knn}
+                        Algorithm to use for feature weighting
 
 optional arguments:
   -h, --help            show this help message and exit
-  --seed SEED           Seed to initialize the random generator (default: 77766814)
-  --trace {True,False}  Generate trace for local search? (default: False)
-  --n_jobs {1,2,3,4}    Number of jobs to run in parallel for evaluating partitions. (default: 1)
+  --seed SEED           Seed to initialize the random generator (default:
+                        77766814)
+  --n_jobs {1,2,3,4}    Number of jobs to run in parallel to evaluate
+                        partitions. (default: 1)
+  --trace               Generate trace for local search (default: False)
+  --to_excel            Dump results into xlsx file (default: False)
 ```
 
 Así, si queremos ejecutar el algoritmo de Búsqueda Local con el conjunto de datos
@@ -475,16 +480,18 @@ diferentes algoritmos que utilizan la misma métrica, este detalle no es relevan
 
 Para el caso *Colposcopy* vemos que el clasificador básico tiene una precisión muy
 próxima a las versiones Relief y Búsqueda Local. Incluso una precisión mayor que este
-último. Para el algoritmo Relief, poco hay que añadir, en ese conjunto a priori no
-funciona bien, la mejora es prácticamente nula. Pero el algoritmo BL si que es importante
-recalcar una cosa. La diferencia de precision entre 1-NN y BL es de tan solo 3% .
-Es decir, hemos perdido un 3% de precisión usando únicamente el 23% de las
-características. Esto implica que nuestro algoritmo posiblemente vaya a generalizar
-mucho mejor que el clasificador 1-NN y el coste computacional de predecir nuevos
-valores se va a reducir drásticamente. El inconveniente principal de este algoritmo
-en este conjunto de datos (y en general), es el tiempo de preprocesado. Para obtener
-los pesos correspondientes tarda de media ~8s, lo cuál es bastante mayor que los
-otros dos algoritmos comparados aunque no es un tiempo desmesurado.
+último. Para el algoritmo Relief, sorprendentemente, en ese conjunto la reducción es
+considerable y la precisión se mantiene con respecto a 1-NN, por tanto, podríamos decir
+que funciona bastante bien para este dataset en concreto. Para el algoritmo de 
+Búsqueda local es importante recalcar una cosa. La diferencia de precision entre 
+1-NN y este algoritmo, es de tan solo 3%. Es decir, hemos perdido un 3% de precisión usando 
+únicamente el 23% de las características. Esto implica que nuestro algoritmo 
+posiblemente vaya a generalizar mucho mejor que el clasificador 1-NN y el coste 
+computacional de predecir nuevos valores se va a reducir drásticamente. 
+El inconveniente principal de este algoritmo en este conjunto de datos (y en general),
+es el tiempo de preprocesado. Para obtener los pesos correspondientes tarda de 
+media ~8s, lo cuál es bastante mayor que los otros dos algoritmos comparados aunque 
+no es un tiempo desmesurado.
 
 
 Lo importante de los algoritmos de APC que estamos implementado es que una vez calculado
@@ -502,13 +509,14 @@ parte de un flujo de trabajo en Aprendizaje Automático.
 
 Algo similar pasa con el resto de casos. El algoritmo Relief esta vez si que mejora
 la precisión con respecto al 1-NN. Ahora si podemos decir que este algoritmo funciona
-correctamente para estos casos particulares. Cumple su objetivo que es maximizar el
-rendimiento del modelo ponderando pero sin reducir las características. Por otra parte,
-la búsqueda local podríamos decir que es el algoritmo que menor precisión tiene.
-Esto es debido a que la función fitness pondera por igual la reducción y la precisión
-por tanto la precisión se me un poco mermada. Aun así, como hemos comentado antes,
-la diferencia en precisión entre Búsqueda local y el resto de algoritmos no es demasiado
-grande mientras que la reducción es considerable.
+correctamente para estos casos particulares, aunque la reducción es muy baja. 
+Cumple su objetivo que es maximizar el rendimiento del modelo ponderando pero sin 
+reducir las características. Por otra parte, la búsqueda local podríamos decir 
+que es el algoritmo que menor precisión tiene. Esto es debido a que la función 
+fitness pondera por igual la reducción y la precisión por tanto la precisión se 
+me un poco mermada. Aun así, como hemos comentado antes, la diferencia en precisión 
+entre Búsqueda local y el resto de algoritmos no es demasiado grande mientras que 
+la reducción es considerable.
 
 
 >**Nota**: Cuando hablamos de que la diferencia entre precisiones no es demasiado grande,
@@ -518,6 +526,12 @@ evaluaciones médicas, detección de fraude, etc...
 Si que tendríamos que tener en cuenta estas diferencias. En estos casos, deberíamos
 ajustar el parámetro $\alpha$ para ponderar más la precisión, por ejemplo $\alpha=0.75$.
 
+
+Como conclusión final, podríamos decir que usar una buena implementación del algoritmo
+de búsqueda local que sea escalable para problemas reales con espacios dimensionales
+más grandes que los aquí utilizados, puede ser una buena estrategia para reducir la
+dimensionalidad del problema, mejorar la eficiencia en predicciones, interpretar
+modelos "black-box" o reducir la varianza.
 
 ## Gráficos
 
@@ -550,7 +564,7 @@ y Búsqueda local existen dos casos donde hay outliers. Para Relief, esto es deb
 la naturaleza greedy del algoritmo y para búsqueda local esto es debido a lo comentado
 anteriormente sobre convergencia. Cada partición de datos genera un función fitness con
 una geometría distinta, por tanto un búsqueda local puede hacer que lleguemos
-a puntos máximos totalmente distintos en cada caso. A modo de resumen, podríamos decir
+a máximos totalmente distintos en cada caso. A modo de resumen, podríamos decir
 que los algoritmos Relief y Búsqueda Local son más sensibles a los cambios en las particiones
 de datos que el clasificador 1-NN básico.
 
