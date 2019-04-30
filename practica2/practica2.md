@@ -1,5 +1,5 @@
 ---
-title: Práctica 1. Aprendizaje de Pesos en Características (APC)
+title: Práctica 2. Aprendizaje de Pesos en Características (APC)
 author: ["Antonio Molner Domenech", "DNI: 77766814L",
          "Grupo MH3: Jueves de 17:30h a 19:30h", "antoniomolner@correo.ugr.es"]
 lang: es
@@ -143,7 +143,8 @@ KNN de un vecino cuando ponderamos con el vector de pesos $\vec{W}$. La precisi�
 se calcula de dos formas distintas dependiendo de cuando se evalúa.
 
 Si se evalúa con únicamente los datos de entrenamiento, como es el caso
-para la búsqueda local, se utiliza el método Leave-One-Out comentado anteriormente:
+para la búsqueda local o los algoritmos genéticos, 
+se utiliza el método Leave-One-Out comentado anteriormente:
 
 ```{.pascal caption="Pseudocódigo de la validación Leave-One-Out"}
 function accuracy_leave_one_out(X_train, y_train)
@@ -254,6 +255,16 @@ function fitness(weights, accuracy, alpha=0.5, threshold=0.2):
 
 
 
+
+## Algoritmos genéticos
+
+### Operadores
+
+### Estrategias
+
+
+## Algoritmos meméticos
+
 # Algoritmo de comparación
 
 ## Relief
@@ -291,7 +302,7 @@ del código se ha descartado esa opción.
 
 # Proceso de desarrollo
 
-Para la implementación de los algoritmos, tanto Relief como Búsqueda Local
+Para la implementación de todos los algoritmos,
 se ha utilizado **Python3**. Las principales fuentes de información utilizadas
 para el desarrollo han sido el seminario, el guión de prácticas y la documentación
 oficial de Python y los diferentes paquetes utilizados.
@@ -300,6 +311,11 @@ Con el fin de reutilizar todo el código posible, he hecho uso extensivo de la
 biblioteca de cálculo numérico y manejo de arrays **Numpy**. Esto ha permitido
 tener una implementación limpia y concisa (~300 lineas totales) con una velocidad
 de ejecución aceptable en comparación con otros lenguajes como C.
+
+Para la implementación de los algoritmos evolutivos se ha utilizado el framework
+DEAP, que permite de una forma concisa y eficiente implementar todo tipo de
+estrategias evolutivas. Se ha usado además para reutilizar algunos operadores
+como el torneo binario.
 
 También he utilizado algunos **profilers** tanto a nivel de función como a nivel de línea,
 para detectar los cuellos de botella en el algoritmo de Búsqueda Local y determinar
@@ -314,12 +330,12 @@ usando Cython, Numba y Pythran las cuáles, desgraciadamente, no resultaron exit
 mejoras que ofrecían no justificaban la complicación en cuanto a desarrollo y distribución
 del proyecto.
 
-Finalmente, una vez desarrollado ambos algoritmos, se envolvieron en una clase con
+Finalmente, una vez desarrollado los algoritmos, se envolvieron en una clase con
 una interfaz similar a los objetos de Scikit-Learn para permitir una integración 
 sencilla con el resto del código. Con estas dos clases, ya se implementó el 
 programa principal.
 
-El programa principal (*practica1.py*) tiene varias funcionalidades interesantes.
+El programa principal (*practica2.py*) tiene varias funcionalidades interesantes.
 La primera de ellas es la **validación en paralelo** de los clasificadores y salida
 bien formateada de los resultados. El programa una vez obtenidos los resultados
 genera unos gráficos en formato PNG que se almacenan en la carpeta **output**.
@@ -362,16 +378,18 @@ el algoritmo a usar, número de procesos a ejecutar en paralelo, etc.
 En cualquier momento podemos acceder a la ayuda con **-h**.
 
 ```{.bash caption="Salida de la página de ayuda"}
-python3 practica1.py -h
-
-usage: practica1.py [-h] [--seed SEED] [--n_jobs {1,2,3,4}] [--trace]
+➜ python3 practica2.py -h
+usage: practica2.py [-h] [--seed SEED] [--n_jobs {1,2,3,4}] [--trace]
                     [--to_excel]
-                    dataset {relief,local-search,knn}
+                    dataset
+                    {knn,relief,local-search,
+                    agg-blx,agg-ca,age-blx,age-ca,
+                    AM-(1,1.0),AM-(1,0.1),AM-(1,0.1mej)}
 
 positional arguments:
   dataset               Predefined datasets or a csv file
-  {relief,local-search,knn}
-                        Algorithm to use for feature weighting
+  {knn,relief,local-search,agg-blx,agg-ca,age-blx,age-ca,
+    AM-(1,1.0),AM-(1,0.1),AM-(1,0.1mej)} Algorithm to use for feature weighting
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -383,27 +401,27 @@ optional arguments:
   --to_excel            Dump results into xlsx file (default: False)
 ```
 
-Así, si queremos ejecutar el algoritmo de Búsqueda Local con el conjunto de datos
+Así, si queremos ejecutar el algoritmo de AM-(1,1.0) con el conjunto de datos
 Colposcopy, la semilla 1, y en paralelo, ejecutaríamos lo siguiente:
 
 ```{caption="Salida del programa principal"}
 
-python3 practica1.py colposcopy local-search --seed=1 --n_jobs=4
+python3 practica2.py colposcopy 'AM-(1,1.0)' --seed=1 --n_jobs=4
 
 =======================================================
-    COLPOSCOPY     |     LOCAL-SEARCH      |  SEED = 1
+    COLPOSCOPY     |     AM-(1,1.0)      |  SEED = 1
 =======================================================
-             Accuracy  Reduction  Aggregation      Time
-Partition 1  0.745763   0.774194     0.759978  4.893794
-Partition 2  0.754386   0.838710     0.796548  4.396733
-Partition 3  0.736842   0.677419     0.707131  4.629782
-Partition 4  0.754386   0.854839     0.804612  4.111064
-Partition 5  0.771930   0.822581     0.797255  3.826707
+             Accuracy  Reduction  Aggregation       Time
+Partition 1  0.694915   0.951613     0.823264  10.574860
+Partition 2  0.666667   0.935484     0.801075  10.933312
+Partition 3  0.631579   0.935484     0.783531  11.138601
+Partition 4  0.666667   0.935484     0.801075  10.324892
+Partition 5  0.719298   0.951613     0.835456   6.054140
 
-         Accuracy  Reduction  Aggregation      Time
-Mean     0.752661   0.793548     0.773105  4.371616
-Std.Dev  0.012991   0.071588     0.040775  0.419751
-Median   0.754386   0.822581     0.796548  4.396733
+         Accuracy  Reduction  Aggregation       Time
+Mean     0.675825   0.941935     0.808880   9.805161
+Std.Dev  0.033090   0.008834     0.020479   2.120348
+Median   0.666667   0.935484     0.801075  10.574860
 ```
 
 > **NOTA:** La semilla por defecto es 77766814. Es la semilla utilizada para el
@@ -411,7 +429,7 @@ análisis de resultados.
 
 El parámetro *--trace* es muy interesante ya que puesto a True, permite generar
 un gráfico de como varía la función fitness a lo largo de las iteraciones.
-Obviamente es solamente aplicable para búsqueda local. Un ejemplo de gráfico
+Obviamente no es aplicable para Relief. Un ejemplo de gráfico
 es el siguiente:
 
 ![](./img/trace.png)
@@ -571,6 +589,19 @@ de datos que el clasificador 1-NN básico.
 
 \pagebreak
 
+
+## Analizando la diferencia de tiempos
+
+### Diferencias entre Algoritmos Evolutivos y Búsqueda Local
+
+![Profiling de AGG-CA](img/pyinstrument_agg_ca.png)
+
+### Diferencias entre BLX y Cruce Aritmético
+
+![Profiling de AGG-BLX](img/pyinstrument_agg_blx.png)
+
+![Profiling de AGG-CA](img/pyinstrument_agg_ca.png)
+
 # Referencias bibliográficas
 
 ## Entendimiento
@@ -595,3 +626,5 @@ correspondientes:
 - [joblib (Paralelismo)](https://joblib.readthedocs.io/en/latest/)
 
 - [KDTree](https://stackoverflow.com/questions/48126771/nearest-neighbour-search-kdtree)
+
+- [Deap](https://deap.readthedocs.io/en/master/index.html)

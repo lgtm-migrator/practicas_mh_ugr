@@ -24,7 +24,8 @@ class AlgorithmBase():
         self.reduction = 0
         self.seed = seed
 
-    def fit(self, X, y):
+    def set_feature_importances(self, feature_importances):
+        self.feature_importances = feature_importances
         self.reduction = np.sum(self.feature_importances < self.threshold)
         self.reduction /= len(self.feature_importances)
 
@@ -46,6 +47,8 @@ def evaluate(weights, X, y):
         the input and labels data.
     """
     X_transformed = (X * weights)[:, weights > 0.2]
+    if X_transformed.shape[1] == 0:
+        return 0
     kdtree = KDTree(X_transformed)
     neighbours = kdtree.query(X_transformed, k=2)[1][:, 1]
     accuracy = np.mean(y[neighbours] == y)

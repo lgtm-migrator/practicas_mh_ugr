@@ -2,7 +2,7 @@ from .core import evaluate, AlgorithmBase
 import numpy as np
 
 
-def local_search(X, y, max_neighbours, sigma, seed):
+def local_search(X, y, max_neighbours, sigma, seed, init_weights=None):
     """Local Search Algorithm
 
     Keyword arguments:
@@ -16,7 +16,10 @@ def local_search(X, y, max_neighbours, sigma, seed):
     """
     n_features = X.shape[1]
     np.random.seed(seed)
-    weights = np.random.rand(n_features)
+    if np.any(init_weights):
+        weights = np.copy(init_weights)
+    else:
+        weights = np.random.rand(n_features)
     fitness = evaluate(weights, X, y)
     trace = np.zeros(max_neighbours)
     n_generated = 0
@@ -39,6 +42,7 @@ def local_search(X, y, max_neighbours, sigma, seed):
                 w_prime[k] = last_state
             if n_generated > max_neighbours or no_improvement >= (20 * n_features):
                 return weights, trace[trace > 0], n_generated
+    trace[-1] = fitness
     return weights, trace[trace > 0], n_generated
 
 
@@ -56,10 +60,8 @@ class LocalSearch(AlgorithmBase):
         self.neighbors_generated = 0
         super().__init__(threshold, seed)
 
-
     def fit(self, X, y):
         result = local_search(X, y, self.max_neighbours, self.sigma, self.seed)
-        self.feature_importances = result[0]
         self.trace = result[1]
         self.neighbors_generated = result[2]
-        super().fit(X, y)
+        super().set_feature_importances(result[0])

@@ -1,4 +1,4 @@
-from algorithms.genetic_algorithm import EvolutionaryAlgorithm
+from algorithms.evolutionary import EvolutionaryAlgorithm, MemeticAlgorithm
 from algorithms.local_search import LocalSearch
 from algorithms.relief import Relief
 
@@ -23,13 +23,26 @@ KNN = FunctionTransformer(lambda x: x, validate=False)
 KNN.reduction = 0
 
 ALGORITHMS = {
-    'knn': KNN,
-    'relief': Relief(),
-    'local-search': LocalSearch(),
-    'agg-blx': EvolutionaryAlgorithm(mate='blx', has_elitism=True),
-    'agg-ca': EvolutionaryAlgorithm(mate='ca', has_elitism=True),
-    'age-blx': EvolutionaryAlgorithm(mate='blx', has_elitism=False),
-    'age-ca': EvolutionaryAlgorithm(mate='ca', has_elitism=False)
+    'knn':
+    KNN,
+    'relief':
+    Relief(),
+    'local-search':
+    LocalSearch(),
+    'agg-blx':
+    EvolutionaryAlgorithm(mate='blx', generational=True),
+    'agg-ca':
+    EvolutionaryAlgorithm(mate='ca', generational=True),
+    'age-blx':
+    EvolutionaryAlgorithm(mate='blx', generational=False),
+    'age-ca':
+    EvolutionaryAlgorithm(mate='ca', generational=False),
+    'AM-(1,1.0)':
+    MemeticAlgorithm(mate='ca', generational=True, strategy='AM-(1,1.0)'),
+    'AM-(1,0.1)':
+    MemeticAlgorithm(mate='ca', generational=True, strategy='AM-(1,0.1)'),
+    'AM-(1,0.1mej)':
+    MemeticAlgorithm(mate='ca', generational=True, strategy='AM-(1,0.1mej)')
 }
 
 
