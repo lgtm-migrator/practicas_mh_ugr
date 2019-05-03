@@ -3,9 +3,9 @@ import numpy as np
 
 
 def cx_arithmetic(ind1, ind2):
-    c1 = (ind1 + ind2) / 2
     alphas = np.random.rand(len(ind1))
-    c2 = (alphas * ind1 + (1 - alphas) * ind2) / 2
+    c1 = (1 - alphas) * ind1 + alphas * ind2
+    c2 = alphas * ind1 + (1 - alphas) * ind2
     ind1[:] = c1
     ind2[:] = c2
     return ind1, ind2
