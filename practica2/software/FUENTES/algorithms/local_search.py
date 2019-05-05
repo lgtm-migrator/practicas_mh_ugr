@@ -3,16 +3,16 @@ import numpy as np
 
 
 def local_search(X, y, max_neighbours, sigma, seed, init_weights=None):
-    """Local Search Algorithm
+    """
+    Local Search Algorithm
 
-    Keyword arguments:
-    X -- Train input
-    y -- Train labels
-    max_neighbours -- Max number of neighbours to explore.
-    sigma -- Standard deviation of Gaussian mutation.
-    seed -- Seed to initialize the random generator.
-            It is recommended to specify this in order to replicate
-            the experiment across executions.
+    :param X: Train input
+    :param y: Train labels
+    :param max_neighbours: Max number of neighbours to explore.
+    :param sigma: Standard deviation of Gaussian mutation.
+    :param seed: Seed to initialize the random generator.
+                 It is recommended to specify this in order to replicate
+                 the experiment across executions.
     """
     n_features = X.shape[1]
     np.random.seed(seed)
@@ -48,7 +48,7 @@ def local_search(X, y, max_neighbours, sigma, seed, init_weights=None):
 
 class LocalSearch(AlgorithmBase):
     """
-    Docstring: Wrapper class for Local Search algorithm that provided
+    Wrapper class for Local Search algorithm that provided
     sklearn-based syntax.
     """
 
@@ -61,6 +61,12 @@ class LocalSearch(AlgorithmBase):
         super().__init__(threshold, seed)
 
     def fit(self, X, y):
+        """
+        Fit the a 1-NN model using Local search for feature weighting.
+
+        :param X: Train inputs
+        :param y: Train labels
+        """
         result = local_search(X, y, self.max_neighbours, self.sigma, self.seed)
         self.trace = result[1]
         self.neighbors_generated = result[2]

@@ -3,6 +3,12 @@ from .core import KDTree, AlgorithmBase
 
 
 def _relief(X, Y):
+    """
+    Relief algorithm.
+
+    :param X: Train input data
+    :param Y: Train label data
+    """
     W = np.zeros(X.shape[1])
     for i in range(X.shape[0]):
         x, y = X[i, :], Y[i]
@@ -23,9 +29,8 @@ def _relief(X, Y):
 
 class Relief(AlgorithmBase):
     """
-    Docstring: Wrapper class for Relief algorithm that provided
+    Wrapper class for Relief algorithm that provided
     sklearn-based syntax.
     """
     def fit(self, X, y):
-        self.feature_importances = _relief(X, y)
-        super().fit(X, y)
+        super().set_feature_importances(_relief(X, y))

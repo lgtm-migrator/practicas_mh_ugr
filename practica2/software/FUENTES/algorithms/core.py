@@ -14,8 +14,8 @@ except ImportError:
 
 class AlgorithmBase():
     """
-    Docstring: Wrapper class for Local Search algorithm that provided
-    sklearn-based syntax.
+    Wrapper class for all algorithms.
+    Subclasses should implement **fit** method.
     """
 
     def __init__(self, threshold=0.2, seed=77766814):
@@ -25,26 +25,41 @@ class AlgorithmBase():
         self.seed = seed
 
     def set_feature_importances(self, feature_importances):
+        """
+        Set feature importances attribute member. And computes
+        the reduction metric.
+        """
         self.feature_importances = feature_importances
         self.reduction = np.sum(self.feature_importances < self.threshold)
         self.reduction /= len(self.feature_importances)
 
     def transform(self, X):
+        """
+        Transform data according to feature weights.
+        It means, multiply each column by its weight, and eliminate
+        columns with weight < 0.2
+        """
         return (X * self.feature_importances
                 )[:, self.feature_importances > self.threshold]
 
     def fit_transform(self, X, y):
+        """
+        Performs fit, then transform.
+        """
         self.fit(X, y)
         return self.transform(X)
 
 
 def evaluate(weights, X, y):
     """Evaluate a solution transforming the input data
-    and calculatig the accuracy.
+    and calculatig the accuracy with leave-one-out validation.
 
-    Returns:
-        the fitness value for the specified weights based on
-        the input and labels data.
+    :param weights: Solution to evaluate
+    :param X: Input data
+    :param y: Label data
+
+    Returns the fitness value for the specified weights based on
+    the input and labels data.
     """
     X_transformed = (X * weights)[:, weights > 0.2]
     if X_transformed.shape[1] == 0:

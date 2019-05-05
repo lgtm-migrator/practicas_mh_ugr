@@ -254,16 +254,261 @@ function fitness(weights, accuracy, alpha=0.5, threshold=0.2):
 ```
 
 
-
-
 ## Algoritmos genéticos
+
+Para el desarrollo de la segunda práctica se ha implementado varios algoritmos evolutivos,
+entre ellos, algoritmos genéticos. Para el desarrollo de estos algoritmos se han tenido
+que diseñar diferentes funciones que las podemos clasificar en *operadores* y 
+en funciones relacionadas con la *estrategia evolutiva*.
 
 ### Operadores
 
+#### Selección
+
+El primer operador implementado es el operador de selección. Para todos los algoritmos
+evolutivos utilizamos el mismo operador, **torneo binario**. Este operador selecciona
+los mejores individuos a partir de una serie de torneos aleatorios realizados
+en parejas de dos individuos. Es decir, se seleccionan dos individuos aleatoriamente
+y el mejor de los dos se introduce en la nueva población. Este proceso se repite
+tantas veces como el número de individuos vayamos a seleccionar para la población 
+descendiente.
+
+```{.pascal caption="Pseudocódigo del operador de selección"}
+function binaryTournament(individuals, num_selected):
+    chosen = []
+    for i = 0...num_selected do
+        aspirants = selectRandomly(individuals, 2)
+        // Añade el mejor de los dos seleccionados
+        chosen.append(max(aspirants, by=fitness_value)) 
+    return chosen
+```
+
+
+#### Cruce
+
+Para el operador de cruce hemos implementado dos opciones distintas.
+El operador BLX-Alpha y el operador Aritmético. Para el caso del primero
+hemos usado un Alpha de 0.3.
+
+
+```{.pascal caption="Pseudocódigo de los operadores de cruce"}
+function cx_arithmetic(ind1, ind2):
+    alphas = random_vector(len(ind1))
+    c1 = (1 - alphas) * ind1 + alphas * ind2
+    c2 = alphas * ind1 + (1 - alphas) * ind2
+    return c1, c2
+
+
+function cx_blx(ind1, ind2, alpha):
+    c_max = max(ind1, ind2) // El máximo componente a componente
+    c_min = min(ind1, ind2) // El mínimo componente a componente
+    inteval = c_max - c_min
+    c1 = uniform_vector(c_min - inteval * alpha,
+                        c_max + inteval * alpha)
+    c2 = uniform_vector(c_min - inteval * alpha,
+                        c_max + inteval * alpha)
+    c1 = clip(c1, 0, 1)
+    c2 = clip(c2, 0, 1)
+    return c1, c2
+```
+
+#### Mutación
+
+Para el operador de mutación hemos usado el mismo que para Búsqueda Local,
+el operador de mutación gaussiano. El cual ha sido modificado para añadir
+la probabilidad de mutación y para devolver un booleano que indica si se 
+ha realizado la mutación o no. Esto evita recalcular las funciones fitness 
+sobre individuos que no han mutado.
+
+
+```{.pascal caption="Pseudocódigo del operador de mutación"}
+def mut_gaussian(individual, mu, sigma, indpb):
+    size = len(individual)
+    mutated = False
+    for i in range(size):
+        if random() < indpb:
+            mutated = True
+            individual[i] += random_gaussian(mu, sigma)
+            if individual[i] > 1:
+                individual[i] = 1
+            elif individual[i] < 0:
+                individual[i] = 0
+    return individual, mutated
+```
+
+
 ### Estrategias
+
+En esta sección se encuentra aquellas funciones relacionadas con la estrategia
+evolutiva de los algoritmos. Existen dos estrategias principales que son,
+la estrategia generacional y estrategia estacionaria. La primera genera
+una población del mismo tamaño que la de los padres, y se emplea un 
+reemplazamiento elitista para conservar el mejor de la anterior 
+población. Para la segunda se generan únicamente dos descendientes que compiten con
+los dos peores de la población actual. Las funciones utilizadas para estas estrategias
+son las siguientes:
+
+
+```{.pascal caption="Pseudocódigo de la ejecución de un un algoritmo evolutido "}
+function run(population_size, max_evaluations, cxpb, mupb,
+              generational=True, mem_strategy=None):
+    hof = HallOfFame(1)
+    pop = create_population(n=population_size)
+    num_generations = 0
+    num_evaluations = evaluate_population(pop)
+    hof.update(pop)
+    trace = []
+    step_func = generational_step if generational else stationary_step
+    while num_evaluations < max_evaluations:
+        num_generations += 1
+        num_evaluations += step_func(pop, cxpb, mupb,
+                                     mem_strategy, num_generations)
+        hof.update(pop)
+        trace.append(hof[0].fitness.values[0])
+    return hof[0], trace
+```
+
+Esta es la función que se encarga de ejecutar el algoritmo evolutivo. Es
+una función genérica que recibe el tamaño de población inicial, número máximo de
+evaluaciones de la función fitness y las estrategias a emplear. Con esta función
+se pueden ejecutar tanto algoritmos genéticos (estacionarios y generacionales) como
+los algoritmos meméticos explicados más adelante.
+
+Como se puede observar, esta función lo único que hace es ejecutar la estrategia
+evolutiva que corresponda, hasta alcanzar el número máximo de evaluaciones. Mientras,
+en cada paso se almacena el mejor individuo encontrado hasta el momento, usando
+un objeto "HallOfFame" que representa una lista ordenada (por fitness) de individuos.
+Finalmente se devuelve dicho individuo y una traza del valor fitness del mejor
+individuo de cada generación.
+
+En cada paso del algoritmo anterior se llama a las siguientes funciones:
+
+```{.pascal caption="Pseudocódigo los esquemas de evolución"}
+function generational_step(pop, cxpb, mupb, mem_strategy, num_generations):
+    offspring = binaryTournament(pop, len(pop))
+    offspring = crossover_and_mutate(offspring, cxpb, mupb)
+    num_evaluations = evaluate_population(offspring)
+    elitism(pop, offspring)
+    if mem_strategy and num_generations % 10 == 0:
+        num_evaluations += mem_strategy(population=offspring)
+    pop = offspring
+    return num_evaluations
+
+
+function stationary_step(pop, cxpb, mupb, mem_strategy, num_generations):
+    offspring = binaryTournament(pop, 2)
+    offspring = crossover_and_mutate(offspring, cxpb, mupb)
+    num_evaluations = evaluate_population(offspring)
+    if mem_strategy and num_generations % 10 == 0:
+        num_evaluations += mem_strategy(population=offspring)
+    change_worst_ones(pop, offspring)
+    return num_evaluations
+```
+
+Como vemos, representan los esquemas de evolución comentados al principio de la
+sección. En cada paso del algoritmo generacional se seleccionan 30 individuos
+y se aplica elitismo (después del cruce y mutación). Mientras que en el estacionario
+se seleccionan únicamente dos, y se aplica su reemplazamiento correspondiente.
+
+Estas dos estrategias hacen uso de la función *crossover_and_mutate* que
+combina y cruza una lista de individuos en base a sus probabilidades
+correspondientes. El pseudocódigo de esta función es el siguiente:
+
+
+```{.pascal caption="Pseudocódigo del cruce y la mutación"}
+function crossover_and_mutate(population, cxpb, mutpb):
+    offspring = clone(population)
+    num_crossovers = floor(cxpb * len(offspring))
+    num_mutations = floor(mutpb * len(offspring))
+    for i = 0..2..num_crossovers; do
+        offspring[i - 1], offspring[i] = crossover(offspring[i - 1], offspring[i])
+        // Invalida el fitness para calcularlo luego
+        delete offspring[i - 1].fitness.values, offspring[i].fitness.values
+    for i = 0...num_mutations; do
+        offspring[i], mutated = mutate(offspring[i])
+        if mutated:
+            // Invalida el fitness para calcularlo luego
+            delete offspring[i].fitness 
+    return offspring
+```
+
+La última función clave para el desarrollo de estos algoritmos es la de evaluación.
+La función "evaluate_population" se encarga de evaluar aquellos individuos con un
+fitness nulo. Estos, son individuos que se han generado nuevos a partir de un
+cruce y/o mutación. Para evaluar cada individuo se utiliza la misma función fitness
+que para Búsqueda Local.
+
+```{.pascal caption="Pseudocódigo de la evaluacion de cromosomas"}
+function evaluate_population(population):
+    evaluations = 0
+    for ind in population; do
+        if ind.fitness is null; do
+            ind.fitness = evaluate(ind)
+            evaluations += 1
+    return evaluations
+```
+
+function evaluate_population(population):
+Como vemos, devuelve el numero de evaluaciones de la función fitness. Esto sirve
+para parar la ejecución del algoritmo cuando se evalúa el fitness un cierto número
+de veces.
+
+
+### Toolbox
+
+Finalmente, hay un concepto que me gustaría explicar que no aparece en el pseudocódigo
+pero si en la implementación. La mayoría de estas funciones, reciben un objeto llamado
+"toolbox". Este objeto no es más que un contenedor con todos los operadores que se van
+a utilizar para el algoritmo. Esto hace que la ejecución de un algoritmo evolutivo
+se pueda abstraer y únicamente haya que crear un "toolbox" con los operadores
+correspondientes. Esto permite desacoplar el código de operadores y funciones de
+evaluación, de la lógica de la estrategia evolutiva. Así por ejemplo, cambiar de operador
+de selección o de cruce, para una misma estrategia (generacional por ej.), es simplemente
+cambiar un atributo del objeto "toolbox". Y si queremos cambiar de estrategia basta
+con indicarle a la función "run" que estrategia queremos.
 
 
 ## Algoritmos meméticos
+
+Partiendo de los algoritmos genéticos descritos anteriormente, sabemos que las funciones
+son genéricas. Si nos fijamos en las estrategias de evolución "generational_step" y
+"stationary_step", ambas incluyen un parámetro para la estrategia memética. En caso
+de que le pasemos la estrategia memética el algoritmo la ejecutará cada 10 generaciones.
+
+Para crear la estrategia memética partimos de la siguiente función:
+
+```
+def memetic_strategy(X, y, max_neighbours, seed, population, num_selected,
+                     prob, sort):
+    if sort:
+        candidates = tools.selBest(population, num_selected)
+    else:
+        candidates = population[:num_selected]
+    evaluations = 0
+    for ind in candidates:
+        if random() < prob:
+            new_ind, trace, n_generated = local_search(X, y, max_neighbours,
+                                                       0.3, seed, ind)
+            evaluations += n_generated
+            ind = new_ind[:]
+            ind.fitness = trace[len(trace) - 1]
+    return evaluations
+```
+
+Esta función puede ejecutar todas las estrategias meméticas de esta práctica.
+Por ejemplo, para el algoritmo AM-(1,1.0), usamos prop = 1, num_selected = 10
+y sort = False; así con todos los algoritmos meméticos.
+Para poder utilizar esta función es necesario hacer una aplicación parcial y 
+prefijar los argumentos para las diferentes configuraciones.
+Esto es posible en el lenguaje de programación que he utilizado para la implementación y
+por eso he decidido crear una única función "plantilla" de la cual derivar todas las
+estrategias meméticas.
+
+Como vemos, el desarrollo de estos algoritmos ha sido muy corto debido al uso 
+extensivo de funciones genéricas para los algoritmos anteriores. Lo cuál a permitido
+introducir las estrategías meméticas sin necesidad de modificar en gran medida el
+código existente.
+
 
 # Algoritmo de comparación
 
@@ -354,17 +599,18 @@ El proyecto no está testeado sobre Anaconda aunque posiblemente funcione.
 El proyecto tiene una serie de dependencias que son necesarias para
 poder ejecutarlo. Mi recomendación es utilizar un entorno virtual de Python
 para instalar las dependencias y así no interferir con los paquetes globales.
-En el directorio del proyecto **FUENTES**, existe un script llamado **install.sh**
-que crea el entorno virtual e instala los paquetes localmente. Los paquetes a
-instalar se encuentra en el fichero "requirements.txt". La lista es larga pero
-realmente no se utilizan tantos paquetes explícitamente. Lo que recoge ese archivo
-son las dependencias y las "dependencias de las dependencias" con sus versiones
-correspondientes para evitar incompatibilidades.
+En el directorio del proyecto **FUENTES**, existe un Makefile que crea el entorno 
+virtual e instala los paquetes localmente. Los paquetes a instalar se encuentra 
+en el fichero "requirements.txt". La lista es larga pero realmente no se utilizan 
+tantos paquetes explícitamente. Lo que recoge ese archivo son las dependencias y 
+las "dependencias de las dependencias" con sus versiones correspondientes para 
+evitar incompatibilidades.
 
-A efectos prácticos, hay que ejecutar únicamente lo siguiente:
+A efectos prácticos, hay que ejecutar únicamente lo siguiente
+(dentro del directorio FUENTES):
 
 ```{.bash caption="Ejecución del script para instalar las dependencias"}
-./FUENTES/install.sh
+make install
 source ./env/bin/activate
 ```
 
@@ -378,7 +624,7 @@ el algoritmo a usar, número de procesos a ejecutar en paralelo, etc.
 En cualquier momento podemos acceder a la ayuda con **-h**.
 
 ```{.bash caption="Salida de la página de ayuda"}
-➜ python3 practica2.py -h
+python3 practica2.py -h
 usage: practica2.py [-h] [--seed SEED] [--n_jobs {1,2,3,4}] [--trace]
                     [--to_excel]
                     dataset
@@ -405,7 +651,6 @@ Así, si queremos ejecutar el algoritmo de AM-(1,1.0) con el conjunto de datos
 Colposcopy, la semilla 1, y en paralelo, ejecutaríamos lo siguiente:
 
 ```{caption="Salida del programa principal"}
-
 python3 practica2.py colposcopy 'AM-(1,1.0)' --seed=1 --n_jobs=4
 
 =======================================================
@@ -439,6 +684,21 @@ dataset únicamente hay que especificar el path del archivo. El único requisito
 es que la variable a predecir se encuentre en la última columna. Esta variable
 no hace falta que esté codificada en enteros, puede ser cualquier variable categórica,
 el sistema se encarga de codificarla.
+
+El Makefile contenido dentro del directorio FUENTES también sirve para ejecutar todos
+los algoritmos a la vez:
+
+```{.bash caption="Ejecución de todos los algoritmos"}
+make run_all
+```
+
+GNU Make puede ejecutar varias recetas de forma paralela, pero por defecto lo 
+realiza secuencialmente. Si su procesador es óptimo para el paralelismo,
+puede ahorrarse tiempo y ejecutar varios algoritmos a la vez:
+
+```{.bash caption="Ejemplo de paralelización con GNU Make"}
+make --jobs=4 run_all
+```
 
 
 # Experimentos y Análisis de resultados

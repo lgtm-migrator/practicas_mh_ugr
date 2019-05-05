@@ -5,6 +5,9 @@ from ..local_search import local_search
 
 
 def copy_individual(source, dest):
+    """
+    Copy the content of an individial (value + fitness)
+    """
     dest[:] = source[:]
     dest.fitness = source.fitness
 
@@ -32,8 +35,17 @@ def change_worst_ones(population, offspring):
             copy_individual(ind_off, ind_pop)
 
 
-def memetic_strategy(X, y, max_neighbours, seed, population, num_selected,
-                     prob, sort):
+def memetic_strategy(population, num_selected, prob, sort, *args, **kwargs):
+    """
+    Generic function for memetics strategies.
+
+    :param population: list of individuals to apply local search.
+    :param num_selected: Number of candidates to apply local search
+    :param prob: Probability of each candidate to mutate
+    :param sort: if true, it sorts the candidates by fitness.
+    :param args: Positional arguments to local_search
+    :param kargs: Keyword arguments to local_search
+    """
     if sort:
         candidates = tools.selBest(population, num_selected)
     else:
@@ -41,11 +53,11 @@ def memetic_strategy(X, y, max_neighbours, seed, population, num_selected,
     evaluations = 0
     for ind in candidates:
         if random.random() < prob:
-            new_ind, trace, n_generated = local_search(X, y, max_neighbours,
-                                                       0.3, seed, ind)
+            new_ind, trace, n_generated = local_search(
+                init_weights=ind, *args, **kwargs)
             evaluations += n_generated
             ind[:] = new_ind[:]
-            ind.fitness.values = (trace[-1], )
+            ind.fitness.values = (trace[-1],)
     return evaluations
 
 
@@ -63,6 +75,11 @@ def evaluate_population(population, toolbox):
 
 
 def crossover_and_mutate(population, toolbox, cxpb, mutpb):
+    """Part of an evolutionary algorithm applying only the variation part
+    (crossover and mutation). The modified individuals have their
+    fitness invalidated. The individuals are cloned so the returned population
+    is independent of the input population.
+    """
     offspring = [toolbox.clone(ind) for ind in population]
     num_crossovers = int(cxpb * len(offspring))
     num_mutations = int(mutpb * len(offspring))
@@ -97,13 +114,21 @@ def stationary_step(toolbox, pop, cxpb, mupb, mem_strategy, num_generations):
     return num_evaluations
 
 
-def run(toolbox,
-        population_size,
-        max_evaluations,
-        cxpb,
-        mupb,
-        generational=True,
-        mem_strategy=None):
+def run(toolbox, population_size, max_evaluations, cxpb, mupb,
+        generational=True, mem_strategy=None):
+    """
+    Run an evolutionary algorithm until a maximun number of evaluations.
+
+    :param toolbox: A :class:`~deap.base.Toolbox` that contains the
+                    evolution operators.
+    :param population_size: The number of individials of each generation
+    :param max_evaluations: Max number of fitness function evaluations.
+    :param cxpb: Crossover probability
+    :param mupb: Mutation probability
+    :param generational: if true, it runs a generational strategy.
+                         Else, it runs an stationary strategy
+    :param mem_strategy: The memetic strategy to use after crossover and mutation.
+    """
     hof = tools.HallOfFame(1, similar=np.array_equal)
     pop = toolbox.population(n=population_size)
     num_generations = 0

@@ -3,6 +3,9 @@ import numpy as np
 
 
 def cx_arithmetic(ind1, ind2):
+    """
+    Arithmetic crossover with random alphas
+    """
     alphas = np.random.rand(len(ind1))
     c1 = (1 - alphas) * ind1 + alphas * ind2
     c2 = alphas * ind1 + (1 - alphas) * ind2
@@ -12,6 +15,9 @@ def cx_arithmetic(ind1, ind2):
 
 
 def cx_blx(ind1, ind2, alpha):
+    """
+    Blend-alpha crossover with specific alpha
+    """
     c_max = np.maximum(ind1, ind2)
     c_min = np.minimum(ind1, ind2)
     inteval = c_max - c_min
@@ -23,6 +29,16 @@ def cx_blx(ind1, ind2, alpha):
 
 
 def mut_gaussian(individual, mu, sigma, indpb):
+    """
+    Gaussian mutation.
+
+    :param individual: individual to mutate.
+    :param mu: mean of the gaussian distribution.
+    :param sigma: standard deviation of the gaussian distribution.
+    :param indpb: probability of an gene to mutate.
+
+    Returns: the individual and a True if it was mutated. False otherwise.
+    """
     size = len(individual)
     mutated = False
     for i in range(size):

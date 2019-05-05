@@ -12,11 +12,19 @@ creator.create("FitnessMax", base.Fitness, weights=(1.0, ))
 creator.create("Individual", np.ndarray, fitness=creator.FitnessMax)
 
 
-def evaluate_individual(ind, X, y):
-    return (evaluate(ind, X, y),)
+def evaluate_individual(*args, **kwargs):
+    """
+    Wrapper for fitness function to use with Deap framework.
+    """
+    return (evaluate(*args, **kwargs),)
 
 
 def create_toolbox(X, y, mate='blx'):
+    """
+    Create a :class:`~deap.base.Toolbox` that contains
+    the evolution operators (crossover, mutation and selection).
+    And the population generation schema.
+    """
     toolbox = base.Toolbox()
     toolbox.register("attr_float", random.random)
     toolbox.register("individual", tools.initRepeat, creator.Individual,
@@ -34,7 +42,7 @@ def create_toolbox(X, y, mate='blx'):
 
 class EvolutionaryAlgorithm(AlgorithmBase):
     """
-    Docstring: Wrapper class with sklearn-based syntax
+    Wrapper class with sklearn-based syntax
     for evolutionary algorithms.
     """
 
@@ -64,7 +72,7 @@ class EvolutionaryAlgorithm(AlgorithmBase):
 
 class MemeticAlgorithm(EvolutionaryAlgorithm):
     """
-    Docstring: Wrapper class with sklearn-based syntax
+    Wrapper class with sklearn-based syntax
     for memetic algorithms.
     """
 
@@ -83,7 +91,7 @@ class MemeticAlgorithm(EvolutionaryAlgorithm):
             prob = 1
             sort = True
         self.strategy = partial(
-            memetic_strategy, prob=prob, sort=sort, num_selected=n_sel)
+            memetic_strategy, prob=prob, sort=sort, num_selected=n_sel, sigma=0.3)
 
     def fit(self, X, y):
         toolbox = create_toolbox(X, y, self.mate)

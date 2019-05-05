@@ -38,11 +38,23 @@ ALGORITHMS = {
     'age-ca':
     EvolutionaryAlgorithm(mate='ca', generational=False),
     'AM-(1,1.0)':
-    MemeticAlgorithm(mate='ca', generational=True, strategy='AM-(1,1.0)'),
+    MemeticAlgorithm(
+        population_size=10,
+        mate='blx',
+        generational=True,
+        strategy='AM-(1,1.0)'),
     'AM-(1,0.1)':
-    MemeticAlgorithm(mate='ca', generational=True, strategy='AM-(1,0.1)'),
+    MemeticAlgorithm(
+        population_size=10,
+        mate='blx',
+        generational=True,
+        strategy='AM-(1,0.1)'),
     'AM-(1,0.1mej)':
-    MemeticAlgorithm(mate='ca', generational=True, strategy='AM-(1,0.1mej)')
+    MemeticAlgorithm(
+        population_size=10,
+        mate='blx',
+        generational=True,
+        strategy='AM-(1,0.1mej)')
 }
 
 
@@ -111,8 +123,8 @@ def pretty_print(dataset, algorithm, seed, results):
     return output
 
 
-def generate_graphics(filename, results, traces):
-    """Generates some bloxplots based on the parameter --results--
+def generate_graphics(algorithm, filename, results, traces):
+    """Generates some bloxplots based on the parameter *results*
     and save it on a file. Optionally, it creates a trace line plot.
     """
     _, axes = plt.subplots(2, len(results.columns) // 2, figsize=(10, 6))
@@ -122,7 +134,7 @@ def generate_graphics(filename, results, traces):
     plt.savefig('%s_results.png' % filename)
     plt.clf()
     if traces:
-        plt.title('Local Search fitness function trace')
+        plt.title(algorithm + ' fitness function trace')
         for i, t in enumerate(traces):
             plt.plot(t, label='Partition %d' % (i + 1))
         plt.legend()
@@ -158,7 +170,7 @@ def main(dataset, algorithm, seed, trace, n_jobs, to_excel):
     results, traces = evaluate_algorithm(algorithm, X, y, seed, trace, n_jobs)
     filename = 'output/%s/%s_%s' % (algorithm, dataset, seed)
     create_directory('output/%s/' % algorithm)
-    generate_graphics(filename, results, traces)
+    generate_graphics(algorithm, filename, results, traces)
     output = pretty_print(dataset, algorithm, seed, results)
     if to_excel:
         results.to_excel(filename + '.xlsx')
