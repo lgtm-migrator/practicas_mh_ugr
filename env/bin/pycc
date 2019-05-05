@@ -1,0 +1,3 @@
+#!/Users/AntonioMolner/Documents/Projects/UGR/practicas_mh_ugr/env/bin/python3
+from numba.pycc import main
+main()

@@ -1,0 +1,177 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Core &#8212; documentación de Metaheurísticas 2019 - Práctica 2</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <link rel="index" title="Índice" href="genindex.html" />
+    <link rel="search" title="Búsqueda" href="search.html" />
+    <link rel="next" title="Búsqueda Local" href="local_search.html" />
+    <link rel="prev" title="Instalación" href="installation.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="core">
+<h1>Core<a class="headerlink" href="#core" title="Enlazar permanentemente con este título">¶</a></h1>
+<p>En este modulo se encuentran las clases y funciones comunes
+para todos los algoritmos. Principalmente existen dos componentes.
+Una clase de la que heredan todos los algoritmos y que sirve para unificar
+la interfaz de uso:</p>
+<div class="section" id="algoritmo-base">
+<h2>Algoritmo base<a class="headerlink" href="#algoritmo-base" title="Enlazar permanentemente con este título">¶</a></h2>
+<dl class="class">
+<dt id="algorithms.core.AlgorithmBase">
+<em class="property">class </em><code class="descclassname">algorithms.core.</code><code class="descname">AlgorithmBase</code><span class="sig-paren">(</span><em>threshold=0.2</em>, <em>seed=77766814</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/core.html#AlgorithmBase"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.core.AlgorithmBase" title="Enlazar permanentemente con esta definición">¶</a></dt>
+<dd><p>Wrapper class for all algorithms.
+Subclasses should implement <strong>fit</strong> method.</p>
+<dl class="method">
+<dt id="algorithms.core.AlgorithmBase.fit_transform">
+<code class="descname">fit_transform</code><span class="sig-paren">(</span><em>X</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/core.html#AlgorithmBase.fit_transform"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.core.AlgorithmBase.fit_transform" title="Enlazar permanentemente con esta definición">¶</a></dt>
+<dd><p>Performs fit, then transform.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="algorithms.core.AlgorithmBase.set_feature_importances">
+<code class="descname">set_feature_importances</code><span class="sig-paren">(</span><em>feature_importances</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/core.html#AlgorithmBase.set_feature_importances"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.core.AlgorithmBase.set_feature_importances" title="Enlazar permanentemente con esta definición">¶</a></dt>
+<dd><p>Set feature importances attribute member. And computes
+the reduction metric.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="algorithms.core.AlgorithmBase.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/core.html#AlgorithmBase.transform"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.core.AlgorithmBase.transform" title="Enlazar permanentemente con esta definición">¶</a></dt>
+<dd><p>Transform data according to feature weights.
+It means, multiply each column by its weight, and eliminate
+columns with weight &lt; 0.2</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="funcion-fitness">
+<h2>Función fitness<a class="headerlink" href="#funcion-fitness" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>Y lo segundo es la función fitness, la cuál también es común para todos
+los algoritmos que exploren soluciones: Búsqueda local, Genéticos, etc.</p>
+<dl class="function">
+<dt id="algorithms.core.evaluate">
+<code class="descclassname">algorithms.core.</code><code class="descname">evaluate</code><span class="sig-paren">(</span><em>weights</em>, <em>X</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/core.html#evaluate"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.core.evaluate" title="Enlazar permanentemente con esta definición">¶</a></dt>
+<dd><p>Evaluate a solution transforming the input data
+and calculatig the accuracy with leave-one-out validation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>weights</strong> – Solution to evaluate</p></li>
+<li><p><strong>X</strong> – Input data</p></li>
+<li><p><strong>y</strong> – Label data</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns the fitness value for the specified weights based on
+the input and labels data.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Metaheurísticas 2019</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegación</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Instalación</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Core</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#algoritmo-base">Algoritmo base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#funcion-fitness">Función fitness</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="local_search.html">Búsqueda Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relief.html">Relief</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evolutionary/genetics.html">Genéticos y Meméticos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evolutionary/operators.html">Operadores genéticos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evolutionary/strategies.html">Estrategias</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="installation.html" title="capítulo anterior">Instalación</a></li>
+      <li>Next: <a href="local_search.html" title="próximo capítulo">Búsqueda Local</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Búsqueda rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Ir a" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Antonio Molner Domenech.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/core.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
