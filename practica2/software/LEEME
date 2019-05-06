@@ -1,3 +1,11 @@
+Como se específica en la memoria, existe un manual online donde se puede
+ver todo el código y los distintos módulos de manera estructurada.
+Le recomiendo que le eche un vistazo. El link es el siguiente:
+
+
+https://www.antoniomolner.com/practicas_mh_ugr/
+
+
 - BIN: Únicamente contiene los datasets y la tabla excel rellena. Esta última
 también esta adjunta en la memoria.
 
@@ -9,18 +17,20 @@ también se ha almacenado en ese directorio.
 
       - algoritmos/* : Los diferentes algoritmos implementados. Un fichero por algoritmo.
 
+      - algoritmos/evolutionary/* : Aquí se encuenta todo el código relacionado con los
+        algoritmos genéticos y meméticos.
+
       - output/*     : Aquí se almacena las salidas de las diferentes ejecuciones.
 
       - requirements.txt : Fichero con todas las dependencias a instalar. No se tiene
       que utilizar, a no ser que haya algún error con alguna dependencia.
 
-      - install.sh   : Script instalador de dependencias. Crea un entorno virtual
-      y descarga todas las dependencias. Este es el único fichero que hay que ejecutar
-      antes de poder utilizar la aplicación. Nota: No recibe argumentos.
+      - Makefile     : Sirve para instalar las dependencias y para ejecutar todos los
+        algoritmos a la vez.
 
       NOTA: Si existe algun fallo al instalar el paquete pykdtree es debido a que su
       sistema no soporta OpenMP o al menos el compilador por defecto. Este error se puede
       obviar ya que la aplicación utilizará otra implementación si no se encuentra dicho
       paquete.
 
-- practica1.pdf: La memoria.
+- practica2.pdf: La memoria.
