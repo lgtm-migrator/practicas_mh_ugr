@@ -34,9 +34,9 @@ ALGORITHMS = {
     'agg-ca':
     EvolutionaryAlgorithm(mate='ca', generational=True),
     'age-blx':
-    EvolutionaryAlgorithm(mate='blx', generational=False),
+    EvolutionaryAlgorithm(mate='blx', generational=False, cxprob=1),
     'age-ca':
-    EvolutionaryAlgorithm(mate='ca', generational=False),
+    EvolutionaryAlgorithm(mate='ca', generational=False, cxprob=1),
     'AM-(1,1.0)':
     MemeticAlgorithm(
         population_size=10,

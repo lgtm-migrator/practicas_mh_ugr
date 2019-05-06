@@ -51,12 +51,14 @@ class EvolutionaryAlgorithm(AlgorithmBase):
                  population_size=30,
                  num_evaluations=15000,
                  mate='blx',
+                 cxprob = 0.7,
                  generational=True):
         self.mate = mate
         self.generational = generational
         self.population_size = population_size
         self.num_evaluations = num_evaluations
         self.trace = None
+        self.cxprob = cxprob
         super().__init__(threshold)
 
     def fit(self, X, y):
@@ -64,8 +66,10 @@ class EvolutionaryAlgorithm(AlgorithmBase):
         if self.seed:
             random.seed(self.seed)
             np.random.seed(self.seed)
-            weights, self.trace = run(toolbox, self.population_size,
-                                      self.num_evaluations, 0.7, 1,
+            weights, self.trace = run(toolbox,
+                                      self.population_size,
+                                      self.num_evaluations,
+                                      self.cxprob, 1,
                                       self.generational)
         self.set_feature_importances(np.array(weights))
 

@@ -83,7 +83,7 @@ def crossover_and_mutate(population, toolbox, cxpb, mutpb):
     offspring = [toolbox.clone(ind) for ind in population]
     num_crossovers = int(cxpb * len(offspring))
     num_mutations = int(mutpb * len(offspring))
-    for i in range(1, num_crossovers, 2):
+    for i in range(1, num_crossovers + 1, 2):
         offspring[i - 1], offspring[i] = toolbox.mate(offspring[i - 1], offspring[i])
         del offspring[i - 1].fitness.values, offspring[i].fitness.values
     for i in range(num_mutations):
