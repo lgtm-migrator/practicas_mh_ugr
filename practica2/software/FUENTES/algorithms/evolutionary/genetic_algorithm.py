@@ -24,6 +24,11 @@ def create_toolbox(X, y, mate='blx'):
     Create a :class:`~deap.base.Toolbox` that contains
     the evolution operators (crossover, mutation and selection).
     And the population generation schema.
+
+    :param X: Train input data.
+    :param y: Train labels.
+    :param mate: The crossover operator to use. if mate != 'blx'
+                 it will use the arithmetic crossover.
     """
     toolbox = base.Toolbox()
     toolbox.register("attr_float", random.random)
@@ -43,7 +48,9 @@ def create_toolbox(X, y, mate='blx'):
 class EvolutionaryAlgorithm(AlgorithmBase):
     """
     Wrapper class with sklearn-based syntax
-    for evolutionary algorithms.
+    for evolutionary algorithms. This class is suitable
+    for all evolutionary algorithms implemented
+    (see :class:`~algorithms.evolutionary.MemeticAlgorithm`)
     """
 
     def __init__(self,
@@ -51,8 +58,22 @@ class EvolutionaryAlgorithm(AlgorithmBase):
                  population_size=30,
                  num_evaluations=15000,
                  mate='blx',
-                 cxprob = 0.7,
+                 cxprob=0.7,
                  generational=True):
+        """
+        Constructor for EvolutionaryAlgorithms.
+
+        :param threshold: The maximun value of a weight to discard.
+        :param population_size: The initial population size
+        :param num_evaluations: Max number of evaluations to perform.
+                                When the algorithm reach this number it stops.
+        :param mate: The crossover operator to use.
+                     See :func:`~algorithms.evolutionary.genetic_algorithm.create_toolbox`
+        :param cxprob: Crossover probability
+        :param generational: if true, the algorithm will run a generational
+                             strategy. Otherwise, it will run an stationary
+                             strategy.
+        """
         self.mate = mate
         self.generational = generational
         self.population_size = population_size
@@ -81,6 +102,13 @@ class MemeticAlgorithm(EvolutionaryAlgorithm):
     """
 
     def __init__(self, strategy, *args, **kwargs):
+        """
+        Constructor for MemeticAlgorithm.
+
+        :param strategy: The memetic strategy to execute.
+                         The possible values are: 'AM-1,1.0',
+                         'AM-(1,0.1)' and 'AM-(1,0.1mej)'
+        """
         super().__init__(*args, **kwargs)
         if strategy == 'AM-(1,1.0)':
             n_sel = self.population_size
