@@ -1,6 +1,8 @@
 Relief
 ======
 
+.. automodule:: algorithms.relief
+
 Para el algoritmo de comparación, se ha implementado el algoritmo
 greedy Relief. Este algoritmo es el siguiente:
 

@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Bienvenido a la documentación de las Prácticas?
+Bienvenido a la documentación de las prácticas!
 ===============================================
 
 En este sitio encontrará toda la documentación relativa a las prácticas
@@ -26,10 +26,10 @@ de la asignatura Metaheurísticas UGR 2019.
 * **Manual de usuario:**
 
   * :doc:`Instalación y ejecución <installation>`
+  * :doc:`Core <core>`
 
 * **Algoritmos básicos:**
 
-  * :doc:`Core <core>`
   * :doc:`Búsqueda local <local_search>`
   * :doc:`Relief <relief>`
 
@@ -40,8 +40,8 @@ de la asignatura Metaheurísticas UGR 2019.
   * :doc:`Estrategias <evolutionary/strategies>`
 
 
-Indices and tables
-==================
+Indices y tablas
+================
 
 * :ref:`genindex`
 * :ref:`modindex`
