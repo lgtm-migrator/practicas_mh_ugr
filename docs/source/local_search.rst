@@ -1,7 +1,7 @@
 Búsqueda Local
 ==============
 
-.. automodule:: algorithms.local_search.AlgorithmBase
+.. automodule:: algorithms.local_search
 
 Para el algoritmo de búsqueda local se han implementado dos
 elementos principales. El primero de ellos es el algoritmo en sí,

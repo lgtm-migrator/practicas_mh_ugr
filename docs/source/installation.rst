@@ -22,11 +22,18 @@ Una vez instalado todas las dependencias debemos activar el entorno virtual ::
 
   source ./env/bin/activate
 
-Podemos ejecutar todos los algoritmos de manera individual con el script
-principal correspondiente. O bien, ejecutar todos los algoritmos para
-todos los conjuntos de datos con el siguiente comando ::
+
+Uso
+---
+
+Para ejecutar todos los algoritmos a la vez debemos ejecutar lo siguiente: ::
 
   make run_all
+
+Si su ordenador es potente, puede ejecutar varios algoritmos simultáneamente
+usando la opción **--jobs** de GNU Make. ::
+
+  make --jobs=4 run_all
 
 
 Para más información sobre como ejecutar cada algoritmo individualmente,
