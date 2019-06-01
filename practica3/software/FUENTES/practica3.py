@@ -3,6 +3,7 @@ from algorithms.local_search import LocalSearch
 from algorithms.relief import Relief
 from algorithms.ils import ILS
 from algorithms.simulated_anneling import SimulatedAnnealing
+from algorithms.differential_evolution import DifferentialEvolution
 
 import matplotlib.pyplot as plt
 import os
@@ -58,7 +59,9 @@ ALGORITHMS = {
         generational=True,
         strategy='AM-(1,0.1mej)'),
     'ils': ILS(),
-    'anneal': SimulatedAnnealing()
+    'anneal': SimulatedAnnealing(),
+    'de/rand/one': DifferentialEvolution('rand_one'),
+    'de/current-to-best/one': DifferentialEvolution('current_to_best')
 }
 
 

@@ -1,4 +1,3 @@
-import random
 from .core import evaluate, AlgorithmBase
 import numpy as np
 
@@ -26,10 +25,12 @@ def annealing(X, y, max_eval, seed):
     max_neighbours = 10 * len(weights)
     max_accepted = len(weights)
     M = max_eval / max_neighbours
+    trace = np.zeros(max_eval)
     while evaluations < max_eval and accepted > 0 and T > Tf:
         accepted = 0
         current_evals = 0
         while current_evals < max_neighbours and accepted < max_accepted:
+            trace[evaluations] = best_fitness
             current_evals += 1
             w_prime = mutate(weights)
             fitness_prime = evaluate(w_prime, X, y)
@@ -46,7 +47,7 @@ def annealing(X, y, max_eval, seed):
         K += 1
         beta = (T0 - Tf) / (M * T0 * Tf)
         T = T / (1 + beta * T)
-    return best_weights
+    return best_weights, trace[trace > 0]
 
 
 class SimulatedAnnealing(AlgorithmBase):
@@ -67,5 +68,6 @@ class SimulatedAnnealing(AlgorithmBase):
         :param X: Train inputs
         :param y: Train labels
         """
-        weights = annealing(X, y, self.max_evaluations, self.seed)
+        weights, trace = annealing(X, y, self.max_evaluations, self.seed)
+        self.trace = trace
         super().set_feature_importances(weights)

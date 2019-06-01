@@ -1,7 +1,5 @@
-ALGORITHMS := relief local-search agg-blx agg-ca age-blx age-ca 'AM-(1,1.0)' 'AM-(1,0.1)' 'AM-(1,0.1mej)'
+ALGORITHMS := ils anneal 'de/rand/one' 'de/current-to-best/one'
 DATESETS := coloposcopy ionosphere texture
-PYTHON := ./env/bin/python3
-
 
 install:
 	echo "Creating virtual environment..."
@@ -14,9 +12,9 @@ clean:
 
 
 $(ALGORITHMS):
-	python3 practica2.py colposcopy $@ --trace --to_excel
-	python3 practica2.py ionosphere $@ --trace --to_excel
-	python3 practica2.py texture $@ --trace --to_excel
+	python3 practica3.py colposcopy $@ --trace --to_excel
+	python3 practica3.py ionosphere $@ --trace --to_excel
+	python3 practica3.py texture $@ --trace --to_excel
 
 
 run_all: $(ALGORITHMS)
