@@ -4,24 +4,49 @@ import numpy as np
 
 
 def mutate(weights):
+    """
+    Mutation function for ILS.
+
+    It selects randomly 10 percent of the weights
+    and mutates it using Gaussian mutation with
+    sigma = 0.4.
+
+    :param weights: Candidate to apply the mutation
+    :returns: a new candidate
+    """
     candidate = np.copy(weights)
     N = len(weights)
     num_comp = int(N * 0.1)
     indices = np.random.permutation(N)[0:num_comp]
     candidate[indices] += np.random.normal(0, 0.4, num_comp)
+    candidate = np.clip(candidate, 0, 1)
     return candidate
 
 
 def ils(X, y, iters, seed):
+    """
+    Iterated local search algorithm.
+
+    It performs ILS with a limit of 1000 neighbours
+    generated per iteration.
+
+    :param X: Input data for fitness evaluation
+    :param y: Input labels for fitness evaluation
+    :param iters: The number of iterations. Also the number
+                   of application of Local search algorithms.
+    :param seed: Seed to feed the random number generator.
+    """
     dim = X.shape[1]
     np.random.seed(seed)
     init_weights = np.random.rand(dim)
-    weights, _, _ = local_search(X, y, 1000, 0.3, seed, init_weights)
+    weights, init_trace, _ = local_search(
+        X, y, 1000, 0.3, seed, init_weights, early_stopping=False)
     best_fitness = evaluate(weights, X, y)
-    traces = []
+    traces = [init_trace]
     for _ in range(iters):
         candidate = mutate(weights)
-        candidate, trace, _ = local_search(X, y, 1000, 0.4, seed, candidate)
+        candidate, trace, _ = local_search(
+            X, y, 1000, 0.3, seed, candidate, early_stopping=False)
         fitness = trace[-1]
         if fitness > best_fitness:
             weights = candidate

@@ -2,7 +2,13 @@ from .core import evaluate, AlgorithmBase
 import numpy as np
 
 
-def local_search(X, y, max_neighbours, sigma, seed=None, init_weights=None):
+def local_search(X,
+                 y,
+                 max_neighbours,
+                 sigma,
+                 seed=None,
+                 init_weights=None,
+                 early_stopping=True):
     """
     Local Search Algorithm
 
@@ -13,6 +19,8 @@ def local_search(X, y, max_neighbours, sigma, seed=None, init_weights=None):
     :param seed: Seed to initialize the random generator.
                  It is recommended to specify this in order to replicate
                  the experiment across executions.
+    :param early_stopping: Whether or not to stop the algorithm after generate
+    20*N neighbours without improvement.
     """
     n_features = X.shape[1]
     if seed:
@@ -41,7 +49,8 @@ def local_search(X, y, max_neighbours, sigma, seed=None, init_weights=None):
                 break
             else:
                 w_prime[k] = last_state
-            if n_generated > max_neighbours or no_improvement >= (20 * n_features):
+            early_stop = early_stopping and no_improvement >= (20 * n_features)
+            if n_generated > max_neighbours or early_stop:
                 return weights, trace[trace > 0], n_generated
     trace[-1] = fitness
     return weights, trace[trace > 0], n_generated

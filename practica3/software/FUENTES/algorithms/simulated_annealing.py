@@ -3,6 +3,13 @@ import numpy as np
 
 
 def mutate(weights):
+    """
+    Mutation function for Simulated Annealing.
+    Also known as perturbation.
+
+    :param weights: Candidate to apply perturbation
+    :returns: a new candidate
+    """
     candidate = np.copy(weights)
     index = np.random.randint(len(weights))
     perturbation = np.random.normal(0, 0.3)
@@ -11,6 +18,14 @@ def mutate(weights):
 
 
 def annealing(X, y, max_eval, seed):
+    """
+    Simulated annealing algorithm.
+
+    :param X: Input data for fitness evaluation
+    :param y: Input labels for fitness evaluation
+    :param max_eval: Maximun number of fitness function evaluations.
+    :param seed: Seed to feed the random number generator.
+    """
     np.random.seed(seed)
     weights = np.random.rand(X.shape[1])
     best_weights = weights
@@ -21,7 +36,6 @@ def annealing(X, y, max_eval, seed):
     Tf = np.clip(1e-3, 0, T0)
     evaluations = 0
     accepted = 1
-    K = 1
     max_neighbours = 10 * len(weights)
     max_accepted = len(weights)
     M = max_eval / max_neighbours
@@ -30,6 +44,7 @@ def annealing(X, y, max_eval, seed):
         accepted = 0
         current_evals = 0
         while current_evals < max_neighbours and accepted < max_accepted:
+            print(evaluations)
             trace[evaluations] = best_fitness
             current_evals += 1
             w_prime = mutate(weights)
@@ -44,7 +59,6 @@ def annealing(X, y, max_eval, seed):
                     best_fitness = fitness
                     best_weights = weights
         evaluations += current_evals
-        K += 1
         beta = (T0 - Tf) / (M * T0 * Tf)
         T = T / (1 + beta * T)
     return best_weights, trace[trace > 0]
@@ -52,7 +66,7 @@ def annealing(X, y, max_eval, seed):
 
 class SimulatedAnnealing(AlgorithmBase):
     """
-    Wrapper class for Local Search algorithm that provided
+    Wrapper class for Simulated Annealing algorithm that provided
     sklearn-based syntax.
     """
 
@@ -65,7 +79,7 @@ class SimulatedAnnealing(AlgorithmBase):
         """
         Fit the a 1-NN model using Simulated Annealing for feature weighting.
 
-        :param X: Train inputs
+        :param X: Train input
         :param y: Train labels
         """
         weights, trace = annealing(X, y, self.max_evaluations, self.seed)

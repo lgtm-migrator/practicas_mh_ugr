@@ -1,0 +1,500 @@
+<h1 id="descripción-del-problema">Descripción del problema</h1>
+<p>El problema del Aprendizaje de Pesos en Características (APC) es un problema de búsqueda de codificación real (<span class="math inline"><em>s</em><em>o</em><em>l</em> ∈ ℝ<sup><em>n</em></sup></span>). Consiste en encontrar un vector de pesos que pondere las características asociadas a un modelo. En este caso utilizamos un modelo no paramétrico llamado KNN. La ponderación se realiza multiplicando cada característica por su valor correspondiente dentro del vector de pesos. Es decir, teniendo unos datos de entrada <span class="math inline"><em>X</em> ∈ ℝ<sup><em>m</em> × <em>n</em></sup></span> y un vector de pesos <span class="math inline"><em>w⃗</em> = (<em>w</em><sub>1</sub>, <em>w</em><sub>2</sub>, ..., <em>w</em><sub><em>n</em></sub>)<sup><em>T</em></sup> ∈ ℝ<sup><em>n</em></sup></span>, multiplicamos cada columna por la componente correspondiente para obtener <span class="math inline"><em>X</em>′</span>.</p>
+<p>La ponderación se realiza para obtener un balance óptimo entre precisión (o cualquier otra métrica que evalúe el modelo) y sencillez. La sencillez se consigue al eliminar ciertas características cuyo peso está por debajo de un umbral, en nuestro caso, <span class="math inline">0.2</span>, ya que nos aseguramos que no son demasiado relevantes para las predicciones. Un modelo no paramétrico como es el caso de KNN tiene la desventaja de que es costoso hacer predicciones mientras que el tiempo de “fitting” es casi nulo. Por ese motivo es importante mantener únicamente las características relevantes para obtener un modelo eficiente. Además, reducimos el riesgo de sobreajuste ya que obtenemos una función hipótesis más sencilla y menos sensible al ruido.</p>
+<p>Para este problema vamos a utilizar dos métodos de validación. El primero, un algoritmo de validación cruzada llamado k-fold, que consiste en dividir el conjunto de entrenamiento en K particiones disjuntas, ajustar el modelo con <span class="math inline"><em>K</em> − 1</span> particiones y validarlo con la partición restante. El proceso se repite con todas las combinaciones posibles (K combinaciones). En nuestro caso usamos <span class="math inline"><em>K</em> = 5</span>, es decir <strong>5-fold cross validation</strong>.</p>
+<p>El segundo algoritmo se utiliza para evaluar las soluciones en cada paso de un algoritmo de búsqueda. Lo que se conoce comúnmente como la función fitness o la función objetivo. Para ese caso calculamos la precision con Leave-One-Out que consiste en usar el mismo conjunto de datos tanto para prueba como para validación pero eliminando la muestra en cuestión antes de predecir para evitar una precisión errónea del 100%.</p>
+<p>Con esto aclarado, podemos definir el marco de trabajo principal de este proyecto, la función fitness u objetivo y el modelo a utilizar:</p>
+<p><br /><span class="math display"><em>f</em>(<em>w⃗</em>) = <em>α</em> × <em>p</em><em>r</em><em>e</em><em>c</em><em>i</em><em>s</em><em>i</em><em>o</em><em>n</em>(<em>w⃗</em>, <em>X</em>) + (1 − <em>α</em>) × <em>r</em><em>e</em><em>d</em><em>u</em><em>c</em><em>c</em><em>i</em><em>o</em><em>n</em>(<em>w⃗</em>)</span><br /></p>
+<p>Donde: <br /><span class="math display">$$
+reduccion(\vec{w}) = \frac{\text{nº de componentes &lt; umbral}}{\text{nº de componentes total}}$$</span><br /> <br /><span class="math display">$$precision(\vec{w}, X) = \frac{\text{predicciones correctas ponderando con } \vec{w}}{\text{predicciones totales}}$$</span><br /></p>
+<p>Para reducir el coste computacional de los algoritmos, vamos a utilizar el clasificador KNN más sencillo usando un solo vecino. Por tanto, para hacer una predicción basta con hallar la clase del vecino más cercano. Se puede utilizar cualquier medida de distancia, en nuestro caso usamos la euclídea <span class="math inline">ℓ<sub>2</sub></span> o <span class="math inline">ℓ<sub>2</sub><sup>2</sup></span>:</p>
+<p><br /><span class="math display">$$vecino(\vec{x}) = \underset{\vec{v} \in X}{\operatorname{argmin}} \ distancia(\vec{x}, \vec{v})$$</span><br /></p>
+<h1 id="descripción-de-la-aplicación-de-los-algoritmos">Descripción de la aplicación de los algoritmos</h1>
+<p>Las soluciones a nuestro problema se representan con un vector de pesos <span class="math inline"><em>w⃗</em> = (<em>w</em><sub>1</sub>, <em>w</em><sub>2</sub>, ..., <em>w</em><sub><em>n</em></sub>)<sup><em>T</em></sup> ∈ [0, 1]<sup><em>n</em></sup></span>. Por tanto, tenemos que cada componente <span class="math inline"><em>w</em><sub><em>i</em></sub></span> pondera una característica distinta. Como podemos intuir, características con un peso próximo a 1 son relevantes para el cálculo de la distancia en KNN mientras que las que tienen un peso próximo a 0 son prácticamente irrelevantes.</p>
+<p>Matemáticamente, la ponderación de pesos podemos verla como una transformación lineal<br />
+<span class="math inline"><em>T</em> : ℝ<sup><em>n</em></sup> → ℝ<sup><em>n</em></sup>, <em>T</em>(<em>x⃗</em>) = (<em>w</em><sub>1</sub><em>x</em><sub><em>i</em></sub>, <em>w</em><sub>2</sub><em>x</em><sub>2</sub>, ..., <em>w</em><sub><em>n</em></sub><em>x</em><sub><em>n</em></sub>)<sup><em>T</em></sup></span>. Claramente podemos ver la matriz asociada a esta aplicación lineal es la siguiente:</p>
+<p><br /><span class="math display">$$M_T =
+\begin{bmatrix}
+    w_1 &amp; 0 &amp; \dots  &amp; 0 \\
+    0 &amp; w_{2} &amp; \dots &amp; 0 \\
+    \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+    0 &amp; 0 &amp; \dots  &amp; w_{n}
+\end{bmatrix}
+$$</span><br /></p>
+<p>Esta forma de ver la ponderación es importante a la hora de implementarla, ya que podemos utilizar cualquier biblioteca de cálculo matricial como BLAS o LAPACK para realizar los cálculos de forma eficiente. Incluso más eficiente que multiplicar cada columna de la matriz de datos por su peso correspondiente. Dichas bibliotecas suelen usar instrucciones máquina óptimas y algoritmos paralelos.</p>
+<p>Una vez sabemos como transformar los datos, podemos evaluar diferentes algoritmos o soluciones. La forma de evaluar cada algoritmo es siempre la misma:</p>
+<ol type="1">
+<li>Dividimos el conjunto en 5 particiones disjuntas</li>
+<li>Para cada partición:
+<ol type="1">
+<li>Calculamos los pesos usando el algoritmo en cuestión con las particiones restantes</li>
+<li>Transformamos los datos tanto de entrenamiento como de prueba con los pesos obtenidos.</li>
+<li>Entrenamos un clasificador KNN con los datos de entrenamiento transformados.</li>
+<li>Evaluamos el modelo con el conjunto de prueba transformado (la partición).</li>
+</ol></li>
+</ol>
+<h2 id="knn">KNN</h2>
+<p>Nuestro clasificador es bastante sencillo de implementar. El pseudocódigo es el siguiente:</p>
+<div class="sourceCode" id="cb1" data-caption="Pseudocódigo del clasificador KNN"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">function</span> KNN(x, X, y)</a>
+<a class="sourceLine" id="cb1-2" title="2">  kdtree = build_KDTree(X)</a>
+<a class="sourceLine" id="cb1-3" title="3">  nearest_neighbour = KDTree.query(x, k=<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb1-4" title="4">  return y[nearest_neighbour]</a></code></pre></div>
+<p>Como se puede observar, se utiliza una árbol KDTree para encontrar el vecino más cercano. Para los conjuntos de datos que estamos utilizando parece una opción sensata comparada con el típico algoritmo de fuerza bruta. La complejidad temporal de estos arboles son de <span class="math inline"><em>O</em>(<em>n</em>)</span> para construirlos y <span class="math inline"><em>O</em>(<em>l</em><em>o</em><em>g</em>(<em>n</em>))</span> hasta <span class="math inline"><em>O</em>(<em>n</em>)</span> en el peor de los casos para consultarlos. Mientras que el algoritmo de fuerza bruta es <span class="math inline"><em>O</em>(<em>n</em>)</span> para cada consulta. Si construimos un solo árbol y realizamos muchas consultas, da un mejor rendimiento que fuerza bruta. <strong>Nota</strong>: Suponemos que el KDTree al hacer una consulta devuelve un vector de índices correspondiente a los k vecinos más cercanos.</p>
+<h2 id="evaluacion">Evaluacion</h2>
+<p>Para evaluar nuestra solución en las diferentes iteraciones de un algoritmo de búsqueda o una vez entrenado el modelo, se utiliza la siguiente función objetivo:</p>
+<p><br /><span class="math display"><em>f</em>(<em>w⃗</em>) = <em>α</em> × <em>p</em><em>r</em><em>e</em><em>c</em><em>i</em><em>s</em><em>i</em><em>o</em><em>n</em>(<em>w⃗</em>, <em>X</em>) + (1 − <em>α</em>) × <em>r</em><em>e</em><em>d</em><em>u</em><em>c</em><em>c</em><em>i</em><em>o</em><em>n</em>(<em>w⃗</em>)</span><br /></p>
+<p>Como hemos visto anteriormente, la precisión indicaría que tan bueno es el clasificador KNN de un vecino cuando ponderamos con el vector de pesos <span class="math inline"><em>W⃗</em></span>. La precisión se calcula de dos formas distintas dependiendo de cuando se evalúa.</p>
+<p>Si se evalúa con únicamente los datos de entrenamiento, como es el caso para la búsqueda local o los algoritmos genéticos, se utiliza el método Leave-One-Out comentado anteriormente:</p>
+<div class="sourceCode" id="cb2" data-caption="Pseudocódigo de la validación Leave-One-Out"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">function</span> accuracy_leave_one_out(X_train, y_train)</a>
+<a class="sourceLine" id="cb2-2" title="2">  kdtree = build_KDTree(X)</a>
+<a class="sourceLine" id="cb2-3" title="3">  accuracy = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb2-4" title="4">  <span class="kw">for</span> x <span class="kw">in</span> rows(X_train):</a>
+<a class="sourceLine" id="cb2-5" title="5">    <span class="co">// Cogemos el segundo más cercano porque el primero es él mismo.</span></a>
+<a class="sourceLine" id="cb2-6" title="6">    nearest_neighbour = KDTree.query(x, k=<span class="dv">2</span>)[<span class="dv">1</span>]</a>
+<a class="sourceLine" id="cb2-7" title="7">    <span class="kw">if</span> y_train[nearest_neighbour] == y_train[x.index] <span class="kw">then</span></a>
+<a class="sourceLine" id="cb2-8" title="8">      accuracy = accuracy + <span class="dv">1</span></a>
+<a class="sourceLine" id="cb2-9" title="9">  return accuracy / num_rows(X_train)</a></code></pre></div>
+<p>Si se evalúa una vez entrenado el modelo con el conjunto de entrenamiento, se utiliza el conjunto de test para calcular la precision.</p>
+<div class="sourceCode" id="cb3" data-caption="Pseudocódigo de la validación Hold-out"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">function</span> accuracy_test(X_train, y_train, X_test, y_test)</a>
+<a class="sourceLine" id="cb3-2" title="2">  accuracy = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb3-3" title="3">  <span class="kw">for</span> x <span class="kw">in</span> rows(X_test):</a>
+<a class="sourceLine" id="cb3-4" title="4">    prediction = KNN(x, X_train, y_train)</a>
+<a class="sourceLine" id="cb3-5" title="5">    <span class="kw">if</span> prediction == y_test[x.index] <span class="kw">then</span></a>
+<a class="sourceLine" id="cb3-6" title="6">      accuracy = accuracy + <span class="dv">1</span></a>
+<a class="sourceLine" id="cb3-7" title="7">  return accuracy / num_rows(X_test)</a></code></pre></div>
+<p>Como hemos visto anteriormente, cualquier vector de pesos <span class="math inline"><em>w⃗</em> ∈ ℝ<sup><em>d</em></sup></span> no es una solución válida. Cada componente debe estar en el intervalo <span class="math inline">[0, 1]</span> por tanto, es posible que sea necesario capar algunas soluciones. Para ello se puede usar el siguiente algoritmo</p>
+<div class="sourceCode" id="cb4" data-caption="Pseudocódigo de la función clip"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">function</span> clip(w)</a>
+<a class="sourceLine" id="cb4-2" title="2">  <span class="kw">for</span> w_i <span class="kw">in</span> components(w):</a>
+<a class="sourceLine" id="cb4-3" title="3">    <span class="kw">if</span> w_i &lt; <span class="dv">0</span> <span class="kw">then</span>; w_i = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb4-4" title="4">    <span class="kw">if</span> w_i &gt; <span class="dv">1</span> <span class="kw">then</span>; w_i = <span class="dv">1</span></a>
+<a class="sourceLine" id="cb4-5" title="5">  return w</a></code></pre></div>
+<h1 id="pseudocódigo-de-los-algoritmos">Pseudocódigo de los algoritmos</h1>
+<h2 id="búsqueda-local">Búsqueda Local</h2>
+<p>La búsqueda local ya supone un algoritmo más complejo. En nuestro caso utilizamos la búsqueda local del primero mejor, es decir, actualizamos la solución con el primer vecino que tenga un fitness mayor. La generación de cada vecino se realiza mutando una componente aleatoria sin repetición. Esta mutación es simplemente sumar un valor aleatorio de una distribución gaussiana <span class="math inline">𝒩(0, <em>σ</em><sup>2</sup>)</span>. Donde sigma es 0.3 para nuestro caso. El vector de pesos además se inicializa aleatoriamente: <span class="math inline"><em>w⃗</em> = (<em>w</em><sub>0</sub>, <em>w</em><sub>1</sub>, ..., <em>w</em><sub><em>n</em></sub>)<sup><em>T</em></sup></span> donde <span class="math inline"><em>w</em><sub><em>i</em></sub> ∼ 𝒰(0, 1)</span></p>
+<p>El algoritmo se detiene cuando generamos 15000 vecinos o cuando no se produce mejora tras generar <span class="math inline">20<em>n</em></span> vecinos, donde <span class="math inline"><em>n</em></span> es el número de características de nuestro conjunto de datos.</p>
+<div class="sourceCode" id="cb5" data-caption="Pseudocódigo del algoritmo de Búsqueda Local"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">function</span> local_search(X, y, max_neighbours, sigma, seed):</a>
+<a class="sourceLine" id="cb5-2" title="2">    n_features = num_columns(X)</a>
+<a class="sourceLine" id="cb5-3" title="3">    feed_random_generator(seed)</a>
+<a class="sourceLine" id="cb5-4" title="4">    weights = generate_random_uniform_vector(n_features, <span class="dv">0</span>, <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb5-5" title="5">    fitness = evaluate(weights, X, y)</a>
+<a class="sourceLine" id="cb5-6" title="6">    n_generated = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb5-7" title="7">    last_improvement = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb5-8" title="8">    <span class="kw">while</span> n_generated &lt; max_neighbours:</a>
+<a class="sourceLine" id="cb5-9" title="9">        w_prime = copy(weights)</a>
+<a class="sourceLine" id="cb5-10" title="10">        <span class="kw">for</span> k <span class="kw">in</span> permutation(n_features):</a>
+<a class="sourceLine" id="cb5-11" title="11">            n_generated += <span class="dv">1</span></a>
+<a class="sourceLine" id="cb5-12" title="12">            last_state = w_prime[k]</a>
+<a class="sourceLine" id="cb5-13" title="13">            w_prime[k] += generate_gaussian(<span class="dv">0</span>, sigma)</a>
+<a class="sourceLine" id="cb5-14" title="14">            w_prime = clip(w_prime)</a>
+<a class="sourceLine" id="cb5-15" title="15">            f = evaluate(w_prime, X, y)</a>
+<a class="sourceLine" id="cb5-16" title="16">            <span class="kw">if</span> fitness &lt; f <span class="kw">then</span></a>
+<a class="sourceLine" id="cb5-17" title="17">                weights = w_prime</a>
+<a class="sourceLine" id="cb5-18" title="18">                fitness = f</a>
+<a class="sourceLine" id="cb5-19" title="19">                last_improvement = n_generated</a>
+<a class="sourceLine" id="cb5-20" title="20">                <span class="kw">break</span></a>
+<a class="sourceLine" id="cb5-21" title="21">            <span class="kw">else</span> <span class="kw">then</span></a>
+<a class="sourceLine" id="cb5-22" title="22">              w_prime[k] = last_state</a>
+<a class="sourceLine" id="cb5-23" title="23">            diff = n_generated - last_improvement</a>
+<a class="sourceLine" id="cb5-24" title="24">            <span class="kw">if</span> n_generated &gt; max_neighbours <span class="kw">or</span> diff &gt; (<span class="dv">20</span> * n_features):</a>
+<a class="sourceLine" id="cb5-25" title="25">                return weights</a>
+<a class="sourceLine" id="cb5-26" title="26">    return weights</a></code></pre></div>
+<p>La función <em>evaluate</em> utilizada en el algoritmo únicamente transforma los datos con los pesos correspondientes y calcula el fitness de la solución.</p>
+<div class="sourceCode" id="cb6" data-caption="Pseudocódigo del la función evaluadora de soluciones para Búsqueda Local"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">function</span> evaluate(weights, X, y):</a>
+<a class="sourceLine" id="cb6-2" title="2">    <span class="co">// Aplicar la ponderación y eliminar las características</span></a>
+<a class="sourceLine" id="cb6-3" title="3">    <span class="co">// con un peso menor a 0.2</span></a>
+<a class="sourceLine" id="cb6-4" title="4">    X_transformed = transform(weights, X)</a>
+<a class="sourceLine" id="cb6-5" title="5">    accuracy = knn_accuracy_leave_one_out(X_transformed, y)</a>
+<a class="sourceLine" id="cb6-6" title="6">    return fitness(weights, accuracy)</a></code></pre></div>
+<div class="sourceCode" id="cb7" data-caption="Pseudocódigo del la función fitness"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">function</span> fitness(weights, accuracy, alpha=<span class="dv">0.5</span>, threshold=<span class="dv">0.2</span>):</a>
+<a class="sourceLine" id="cb7-2" title="2">    reduction = count(weights &lt; threshold) / length(weights)</a>
+<a class="sourceLine" id="cb7-3" title="3">    return alpha * accuracy + (<span class="dv">1</span> - alpha) * reduction</a></code></pre></div>
+<h2 id="algoritmos-genéticos">Algoritmos genéticos</h2>
+<p>Para el desarrollo de la segunda práctica se ha implementado varios algoritmos evolutivos, entre ellos, algoritmos genéticos. Para el desarrollo de estos algoritmos se han tenido que diseñar diferentes funciones que las podemos clasificar en <em>operadores</em> y en funciones relacionadas con la <em>estrategia evolutiva</em>.</p>
+<h3 id="operadores">Operadores</h3>
+<h4 id="selección">Selección</h4>
+<p>El primer operador implementado es el operador de selección. Para todos los algoritmos evolutivos utilizamos el mismo operador, <strong>torneo binario</strong>. Este operador selecciona los mejores individuos a partir de una serie de torneos aleatorios realizados en parejas de dos individuos. Es decir, se seleccionan dos individuos aleatoriamente y el mejor de los dos se introduce en la nueva población. Este proceso se repite tantas veces como el número de individuos vayamos a seleccionar para la población descendiente.</p>
+<div class="sourceCode" id="cb8" data-caption="Pseudocódigo del operador de selección"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">function</span> binaryTournament(individuals, num_selected):</a>
+<a class="sourceLine" id="cb8-2" title="2">    chosen = []</a>
+<a class="sourceLine" id="cb8-3" title="3">    <span class="kw">for</span> i = <span class="dv">0</span>...num_selected <span class="kw">do</span></a>
+<a class="sourceLine" id="cb8-4" title="4">        aspirants = selectRandomly(individuals, <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb8-5" title="5">        <span class="co">// Añade el mejor de los dos seleccionados</span></a>
+<a class="sourceLine" id="cb8-6" title="6">        chosen.append(max(aspirants, by=fitness_value)) </a>
+<a class="sourceLine" id="cb8-7" title="7">    return chosen</a></code></pre></div>
+<h4 id="cruce">Cruce</h4>
+<p>Para el operador de cruce hemos implementado dos opciones distintas. El operador BLX-Alpha y el operador Aritmético. Para el caso del primero hemos usado un Alpha de 0.3.</p>
+<div class="sourceCode" id="cb9" data-caption="Pseudocódigo de los operadores de cruce"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">function</span> cx_arithmetic(ind1, ind2):</a>
+<a class="sourceLine" id="cb9-2" title="2">    alphas = random_vector(len(ind1))</a>
+<a class="sourceLine" id="cb9-3" title="3">    c1 = (<span class="dv">1</span> - alphas) * ind1 + alphas * ind2</a>
+<a class="sourceLine" id="cb9-4" title="4">    c2 = alphas * ind1 + (<span class="dv">1</span> - alphas) * ind2</a>
+<a class="sourceLine" id="cb9-5" title="5">    return c1, c2</a>
+<a class="sourceLine" id="cb9-6" title="6"></a>
+<a class="sourceLine" id="cb9-7" title="7"></a>
+<a class="sourceLine" id="cb9-8" title="8"><span class="kw">function</span> cx_blx(ind1, ind2, alpha):</a>
+<a class="sourceLine" id="cb9-9" title="9">    c_max = max(ind1, ind2) <span class="co">// El máximo componente a componente</span></a>
+<a class="sourceLine" id="cb9-10" title="10">    c_min = min(ind1, ind2) <span class="co">// El mínimo componente a componente</span></a>
+<a class="sourceLine" id="cb9-11" title="11">    inteval = c_max - c_min</a>
+<a class="sourceLine" id="cb9-12" title="12">    c1 = uniform_vector(c_min - inteval * alpha,</a>
+<a class="sourceLine" id="cb9-13" title="13">                        c_max + inteval * alpha)</a>
+<a class="sourceLine" id="cb9-14" title="14">    c2 = uniform_vector(c_min - inteval * alpha,</a>
+<a class="sourceLine" id="cb9-15" title="15">                        c_max + inteval * alpha)</a>
+<a class="sourceLine" id="cb9-16" title="16">    c1 = clip(c1, <span class="dv">0</span>, <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb9-17" title="17">    c2 = clip(c2, <span class="dv">0</span>, <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb9-18" title="18">    return c1, c2</a></code></pre></div>
+<h4 id="mutación">Mutación</h4>
+<p>Para el operador de mutación hemos usado el mismo que para Búsqueda Local, el operador de mutación gaussiano. El cual ha sido modificado para añadir la probabilidad de mutación y para devolver un booleano que indica si se ha realizado la mutación o no. Esto evita recalcular las funciones fitness sobre individuos que no han mutado.</p>
+<div class="sourceCode" id="cb10" data-caption="Pseudocódigo del operador de mutación"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb10-1" title="1">def mut_gaussian(individual, mu, sigma, indpb):</a>
+<a class="sourceLine" id="cb10-2" title="2">    size = len(individual)</a>
+<a class="sourceLine" id="cb10-3" title="3">    mutated = <span class="kw">False</span></a>
+<a class="sourceLine" id="cb10-4" title="4">    <span class="kw">for</span> i <span class="kw">in</span> range(size):</a>
+<a class="sourceLine" id="cb10-5" title="5">        <span class="kw">if</span> random() &lt; indpb:</a>
+<a class="sourceLine" id="cb10-6" title="6">            mutated = <span class="kw">True</span></a>
+<a class="sourceLine" id="cb10-7" title="7">            individual[i] += random_gaussian(mu, sigma)</a>
+<a class="sourceLine" id="cb10-8" title="8">            <span class="kw">if</span> individual[i] &gt; <span class="dv">1</span>:</a>
+<a class="sourceLine" id="cb10-9" title="9">                individual[i] = <span class="dv">1</span></a>
+<a class="sourceLine" id="cb10-10" title="10">            elif individual[i] &lt; <span class="dv">0</span>:</a>
+<a class="sourceLine" id="cb10-11" title="11">                individual[i] = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb10-12" title="12">    return individual, mutated</a></code></pre></div>
+<h3 id="estrategias">Estrategias</h3>
+<p>En esta sección se encuentra aquellas funciones relacionadas con la estrategia evolutiva de los algoritmos. Existen dos estrategias principales que son, la estrategia generacional y estrategia estacionaria. La primera genera una población del mismo tamaño que la de los padres, y se emplea un reemplazamiento elitista para conservar el mejor de la anterior población. Para la segunda se generan únicamente dos descendientes que compiten con los dos peores de la población actual. Las funciones utilizadas para estas estrategias son las siguientes:</p>
+<div class="sourceCode" id="cb11" data-caption="Pseudocódigo de la ejecución de un un algoritmo evolutido "><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">function</span> run(population_size, max_evaluations, cxpb, mupb,</a>
+<a class="sourceLine" id="cb11-2" title="2">              generational=<span class="kw">True</span>, mem_strategy=None):</a>
+<a class="sourceLine" id="cb11-3" title="3">    hof = HallOfFame(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb11-4" title="4">    pop = create_population(n=population_size)</a>
+<a class="sourceLine" id="cb11-5" title="5">    num_generations = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb11-6" title="6">    num_evaluations = evaluate_population(pop)</a>
+<a class="sourceLine" id="cb11-7" title="7">    hof.update(pop)</a>
+<a class="sourceLine" id="cb11-8" title="8">    trace = []</a>
+<a class="sourceLine" id="cb11-9" title="9">    step_func = generational_step <span class="kw">if</span> generational <span class="kw">else</span> stationary_step</a>
+<a class="sourceLine" id="cb11-10" title="10">    <span class="kw">while</span> num_evaluations &lt; max_evaluations:</a>
+<a class="sourceLine" id="cb11-11" title="11">        num_generations += <span class="dv">1</span></a>
+<a class="sourceLine" id="cb11-12" title="12">        num_evaluations += step_func(pop, cxpb, mupb,</a>
+<a class="sourceLine" id="cb11-13" title="13">                                     mem_strategy, num_generations)</a>
+<a class="sourceLine" id="cb11-14" title="14">        hof.update(pop)</a>
+<a class="sourceLine" id="cb11-15" title="15">        trace.append(hof[<span class="dv">0</span>].fitness.values[<span class="dv">0</span>])</a>
+<a class="sourceLine" id="cb11-16" title="16">    return hof[<span class="dv">0</span>], trace</a></code></pre></div>
+<p>Esta es la función que se encarga de ejecutar el algoritmo evolutivo. Es una función genérica que recibe el tamaño de población inicial, número máximo de evaluaciones de la función fitness y las estrategias a emplear. Con esta función se pueden ejecutar tanto algoritmos genéticos (estacionarios y generacionales) como los algoritmos meméticos explicados más adelante.</p>
+<p>Como se puede observar, esta función lo único que hace es ejecutar la estrategia evolutiva que corresponda, hasta alcanzar el número máximo de evaluaciones. Mientras, en cada paso se almacena el mejor individuo encontrado hasta el momento, usando un objeto “HallOfFame” que representa una lista ordenada (por fitness) de individuos. Finalmente se devuelve dicho individuo y una traza del valor fitness del mejor individuo de cada generación.</p>
+<p>En cada paso del algoritmo anterior se llama a las siguientes funciones:</p>
+<div class="sourceCode" id="cb12" data-caption="Pseudocódigo los esquemas de evolución"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">function</span> generational_step(pop, cxpb, mupb, mem_strategy, num_generations):</a>
+<a class="sourceLine" id="cb12-2" title="2">    offspring = binaryTournament(pop, len(pop))</a>
+<a class="sourceLine" id="cb12-3" title="3">    offspring = crossover_and_mutate(offspring, cxpb, mupb)</a>
+<a class="sourceLine" id="cb12-4" title="4">    num_evaluations = evaluate_population(offspring)</a>
+<a class="sourceLine" id="cb12-5" title="5">    elitism(pop, offspring)</a>
+<a class="sourceLine" id="cb12-6" title="6">    <span class="kw">if</span> mem_strategy <span class="kw">and</span> num_generations % <span class="dv">10</span> == <span class="dv">0</span>:</a>
+<a class="sourceLine" id="cb12-7" title="7">        num_evaluations += mem_strategy(population=offspring)</a>
+<a class="sourceLine" id="cb12-8" title="8">    pop = offspring</a>
+<a class="sourceLine" id="cb12-9" title="9">    return num_evaluations</a>
+<a class="sourceLine" id="cb12-10" title="10"></a>
+<a class="sourceLine" id="cb12-11" title="11"></a>
+<a class="sourceLine" id="cb12-12" title="12"><span class="kw">function</span> stationary_step(pop, cxpb, mupb, mem_strategy, num_generations):</a>
+<a class="sourceLine" id="cb12-13" title="13">    offspring = binaryTournament(pop, <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb12-14" title="14">    offspring = crossover_and_mutate(offspring, cxpb, mupb)</a>
+<a class="sourceLine" id="cb12-15" title="15">    num_evaluations = evaluate_population(offspring)</a>
+<a class="sourceLine" id="cb12-16" title="16">    <span class="kw">if</span> mem_strategy <span class="kw">and</span> num_generations % <span class="dv">10</span> == <span class="dv">0</span>:</a>
+<a class="sourceLine" id="cb12-17" title="17">        num_evaluations += mem_strategy(population=offspring)</a>
+<a class="sourceLine" id="cb12-18" title="18">    change_worst_ones(pop, offspring)</a>
+<a class="sourceLine" id="cb12-19" title="19">    return num_evaluations</a></code></pre></div>
+<p>Como vemos, representan los esquemas de evolución comentados al principio de la sección. En cada paso del algoritmo generacional se seleccionan 30 individuos y se aplica elitismo (después del cruce y mutación). Mientras que en el estacionario se seleccionan únicamente dos, y se aplica su reemplazamiento correspondiente.</p>
+<p>Estas dos estrategias hacen uso de la función <em>crossover_and_mutate</em> que combina y cruza una lista de individuos en base a sus probabilidades correspondientes. El pseudocódigo de esta función es el siguiente:</p>
+<div class="sourceCode" id="cb13" data-caption="Pseudocódigo del cruce y la mutación"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">function</span> crossover_and_mutate(population, cxpb, mutpb):</a>
+<a class="sourceLine" id="cb13-2" title="2">    offspring = clone(population)</a>
+<a class="sourceLine" id="cb13-3" title="3">    num_crossovers = floor(cxpb * len(offspring))</a>
+<a class="sourceLine" id="cb13-4" title="4">    num_mutations = floor(mutpb * len(offspring))</a>
+<a class="sourceLine" id="cb13-5" title="5">    <span class="kw">for</span> i = <span class="dv">0</span>..<span class="dv">2</span>..num_crossovers; <span class="kw">do</span></a>
+<a class="sourceLine" id="cb13-6" title="6">        offspring[i - <span class="dv">1</span>], offspring[i] = crossover(offspring[i - <span class="dv">1</span>], offspring[i])</a>
+<a class="sourceLine" id="cb13-7" title="7">        <span class="co">// Invalida el fitness para calcularlo luego</span></a>
+<a class="sourceLine" id="cb13-8" title="8">        delete offspring[i - <span class="dv">1</span>].fitness.values, offspring[i].fitness.values</a>
+<a class="sourceLine" id="cb13-9" title="9">    <span class="kw">for</span> i = <span class="dv">0</span>...num_mutations; <span class="kw">do</span></a>
+<a class="sourceLine" id="cb13-10" title="10">        offspring[i], mutated = mutate(offspring[i])</a>
+<a class="sourceLine" id="cb13-11" title="11">        <span class="kw">if</span> mutated:</a>
+<a class="sourceLine" id="cb13-12" title="12">            <span class="co">// Invalida el fitness para calcularlo luego</span></a>
+<a class="sourceLine" id="cb13-13" title="13">            delete offspring[i].fitness </a>
+<a class="sourceLine" id="cb13-14" title="14">    return offspring</a></code></pre></div>
+<p>La última función clave para el desarrollo de estos algoritmos es la de evaluación. La función “evaluate_population” se encarga de evaluar aquellos individuos con un fitness nulo. Estos, son individuos que se han generado nuevos a partir de un cruce y/o mutación. Para evaluar cada individuo se utiliza la misma función fitness que para Búsqueda Local.</p>
+<div class="sourceCode" id="cb14" data-caption="Pseudocódigo de la evaluacion de cromosomas"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">function</span> evaluate_population(population):</a>
+<a class="sourceLine" id="cb14-2" title="2">    evaluations = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb14-3" title="3">    <span class="kw">for</span> ind <span class="kw">in</span> population; <span class="kw">do</span></a>
+<a class="sourceLine" id="cb14-4" title="4">        <span class="kw">if</span> ind.fitness <span class="kw">is</span> null; <span class="kw">do</span></a>
+<a class="sourceLine" id="cb14-5" title="5">            ind.fitness = evaluate(ind)</a>
+<a class="sourceLine" id="cb14-6" title="6">            evaluations += <span class="dv">1</span></a>
+<a class="sourceLine" id="cb14-7" title="7">    return evaluations</a></code></pre></div>
+<p>Como vemos, devuelve el numero de evaluaciones de la función fitness. Esto sirve para parar la ejecución del algoritmo cuando se evalúa el fitness un cierto número de veces.</p>
+<h3 id="toolbox">Toolbox</h3>
+<p>Finalmente, hay un concepto que me gustaría explicar que no aparece en el pseudocódigo pero si en la implementación. La mayoría de estas funciones, reciben un objeto llamado “toolbox”. Este objeto no es más que un contenedor con todos los operadores que se van a utilizar para el algoritmo. Esto hace que la ejecución de un algoritmo evolutivo se pueda abstraer y únicamente haya que crear un “toolbox” con los operadores correspondientes. Esto permite desacoplar el código de operadores y funciones de evaluación, de la lógica de la estrategia evolutiva. Así por ejemplo, cambiar de operador de selección o de cruce, para una misma estrategia (generacional por ej.), es simplemente cambiar un atributo del objeto “toolbox”. Y si queremos cambiar de estrategia basta con indicarle a la función “run” que estrategia queremos.</p>
+<h2 id="algoritmos-meméticos">Algoritmos meméticos</h2>
+<p>Partiendo de los algoritmos genéticos descritos anteriormente, sabemos que las funciones son genéricas. Si nos fijamos en las estrategias de evolución “generational_step” y “stationary_step”, ambas incluyen un parámetro para la estrategia memética. En caso de que le pasemos la estrategia memética el algoritmo la ejecutará cada 10 generaciones.</p>
+<p>Para crear la estrategia memética partimos de la siguiente función:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb15-1" title="1"><span class="kw">def</span> memetic_strategy(X, y, max_neighbours, seed, population, num_selected,</a>
+<a class="sourceLine" id="cb15-2" title="2">                     prob, sort):</a>
+<a class="sourceLine" id="cb15-3" title="3">    <span class="cf">if</span> sort:</a>
+<a class="sourceLine" id="cb15-4" title="4">        candidates <span class="op">=</span> tools.selBest(population, num_selected)</a>
+<a class="sourceLine" id="cb15-5" title="5">    <span class="cf">else</span>:</a>
+<a class="sourceLine" id="cb15-6" title="6">        candidates <span class="op">=</span> population[:num_selected]</a>
+<a class="sourceLine" id="cb15-7" title="7">    evaluations <span class="op">=</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb15-8" title="8">    <span class="cf">for</span> ind <span class="kw">in</span> candidates:</a>
+<a class="sourceLine" id="cb15-9" title="9">        <span class="cf">if</span> random() <span class="op">&lt;</span> prob:</a>
+<a class="sourceLine" id="cb15-10" title="10">            new_ind, trace, n_generated <span class="op">=</span> local_search(X, y, max_neighbours,</a>
+<a class="sourceLine" id="cb15-11" title="11">                                                       <span class="fl">0.3</span>, seed, ind)</a>
+<a class="sourceLine" id="cb15-12" title="12">            evaluations <span class="op">+=</span> n_generated</a>
+<a class="sourceLine" id="cb15-13" title="13">            ind <span class="op">=</span> new_ind[:]</a>
+<a class="sourceLine" id="cb15-14" title="14">            ind.fitness <span class="op">=</span> trace[<span class="bu">len</span>(trace) <span class="op">-</span> <span class="dv">1</span>]</a>
+<a class="sourceLine" id="cb15-15" title="15">    <span class="cf">return</span> evaluations</a></code></pre></div>
+<p>Esta función puede ejecutar todas las estrategias meméticas de esta práctica. Por ejemplo, para el algoritmo AM-(1,1.0), usamos prop = 1, num_selected = 10 y sort = False; así con todos los algoritmos meméticos. Para poder utilizar esta función es necesario hacer una aplicación parcial y prefijar los argumentos para las diferentes configuraciones. Esto es posible en el lenguaje de programación que he utilizado para la implementación y por eso he decidido crear una única función “plantilla” de la cual derivar todas las estrategias meméticas.</p>
+<p>Como vemos, el desarrollo de estos algoritmos ha sido muy corto debido al uso extensivo de funciones genéricas para los algoritmos anteriores. Lo cuál a permitido introducir las estrategías meméticas sin necesidad de modificar en gran medida el código existente.</p>
+<h2 id="búsqueda-local-reiterada">Búsqueda Local Reiterada</h2>
+<div class="sourceCode" id="cb16" data-caption="Pseudocódigo del algoritmo de Búsqueda Local Reiterada (ILS)"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">function</span> ils(X, y, iters):</a>
+<a class="sourceLine" id="cb16-2" title="2">    init_weights = generate_random_uniform_vector()</a>
+<a class="sourceLine" id="cb16-3" title="3">    weights = local_search(X, y, <span class="dv">1000</span>, init_weights)</a>
+<a class="sourceLine" id="cb16-4" title="4">    best_fitness = evaluate(weights, X, y)</a>
+<a class="sourceLine" id="cb16-5" title="5">    <span class="kw">for</span> i=<span class="dv">0</span>...iters; <span class="kw">do</span></a>
+<a class="sourceLine" id="cb16-6" title="6">        candidate = mutate(weights)</a>
+<a class="sourceLine" id="cb16-7" title="7">        candidate = local_search(X, y, <span class="dv">1000</span>, candidate)</a>
+<a class="sourceLine" id="cb16-8" title="8">        fitness = trace[-<span class="dv">1</span>]</a>
+<a class="sourceLine" id="cb16-9" title="9">        <span class="kw">if</span> fitness &gt; best_fitness; <span class="kw">do</span></a>
+<a class="sourceLine" id="cb16-10" title="10">            weights = candidate</a>
+<a class="sourceLine" id="cb16-11" title="11">            best_fitness = fitness</a>
+<a class="sourceLine" id="cb16-12" title="12">    return weights</a></code></pre></div>
+<div class="sourceCode" id="cb17" data-caption="Pseudocódigo del operador de mutación para ILS"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">function</span> mutate(weights):</a>
+<a class="sourceLine" id="cb17-2" title="2">    candidate = copy(weights)</a>
+<a class="sourceLine" id="cb17-3" title="3">    N = length(weights)</a>
+<a class="sourceLine" id="cb17-4" title="4">    num_comp = N * <span class="dv">0.1</span></a>
+<a class="sourceLine" id="cb17-5" title="5">    indices = get_random_indices(N, num_comp)</a>
+<a class="sourceLine" id="cb17-6" title="6">    candidate[indices] += generate_gaussian_vector(<span class="dv">0</span>, <span class="dv">0.4</span>, num_comp)</a>
+<a class="sourceLine" id="cb17-7" title="7">    candidate = clip(candidate, <span class="dv">0</span>, <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb17-8" title="8">    return candidate</a></code></pre></div>
+<h2 id="enfriamiento-simulado">Enfriamiento Simulado</h2>
+<div class="sourceCode" id="cb18" data-caption="Pseudocódigo del algoritmo de Enfriamiento Simulado"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">function</span> annealing(X, y, max_eval):</a>
+<a class="sourceLine" id="cb18-2" title="2">    weights = generate_random_uniform_vector()</a>
+<a class="sourceLine" id="cb18-3" title="3">    best_weights = weights</a>
+<a class="sourceLine" id="cb18-4" title="4">    fitness = evaluate(best_weights, X, y)</a>
+<a class="sourceLine" id="cb18-5" title="5">    best_fitness = fitness</a>
+<a class="sourceLine" id="cb18-6" title="6">    T0 = <span class="dv">0.3</span> * best_fitness / (-ln(<span class="dv">0.3</span>))</a>
+<a class="sourceLine" id="cb18-7" title="7">    T = T0</a>
+<a class="sourceLine" id="cb18-8" title="8">    Tf = clip(<span class="dv">1e-3</span>, <span class="dv">0</span>, T0)</a>
+<a class="sourceLine" id="cb18-9" title="9">    evaluations = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb18-10" title="10">    accepted = <span class="dv">1</span></a>
+<a class="sourceLine" id="cb18-11" title="11">    max_neighbours = <span class="dv">10</span> * length(weights)</a>
+<a class="sourceLine" id="cb18-12" title="12">    max_accepted = length(weights)</a>
+<a class="sourceLine" id="cb18-13" title="13">    M = max_eval / max_neighbours</a>
+<a class="sourceLine" id="cb18-14" title="14">    <span class="kw">while</span> evaluations &lt; max_eval <span class="kw">and</span> accepted &gt; <span class="dv">0</span> <span class="kw">and</span> T &gt; Tf; <span class="kw">do</span></a>
+<a class="sourceLine" id="cb18-15" title="15">        accepted = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb18-16" title="16">        current_evals = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb18-17" title="17">        <span class="kw">while</span> current_evals &lt; max_neighbours <span class="kw">and</span> accepted &lt; max_accepted; <span class="kw">do</span></a>
+<a class="sourceLine" id="cb18-18" title="18">            current_evals += <span class="dv">1</span></a>
+<a class="sourceLine" id="cb18-19" title="19">            w_prime = mutate(weights)</a>
+<a class="sourceLine" id="cb18-20" title="20">            fitness_prime = evaluate(w_prime, X, y)</a>
+<a class="sourceLine" id="cb18-21" title="21">            diff = fitness_prime - fitness</a>
+<a class="sourceLine" id="cb18-22" title="22">            prob = exp(diff / T)</a>
+<a class="sourceLine" id="cb18-23" title="23">            <span class="kw">if</span> diff &gt; <span class="dv">0</span> <span class="kw">or</span> generate_random_uniform_scalar() &lt; prob; <span class="kw">do</span></a>
+<a class="sourceLine" id="cb18-24" title="24">                weights = w_prime</a>
+<a class="sourceLine" id="cb18-25" title="25">                fitness = fitness_prime</a>
+<a class="sourceLine" id="cb18-26" title="26">                accepted += <span class="dv">1</span></a>
+<a class="sourceLine" id="cb18-27" title="27">                <span class="kw">if</span> fitness &gt; best_fitness; <span class="kw">do</span></a>
+<a class="sourceLine" id="cb18-28" title="28">                    best_fitness = fitness</a>
+<a class="sourceLine" id="cb18-29" title="29">                    best_weights = weights</a>
+<a class="sourceLine" id="cb18-30" title="30">        evaluations += current_evals</a>
+<a class="sourceLine" id="cb18-31" title="31">        beta = (T0 - Tf) / (M * T0 * Tf)</a>
+<a class="sourceLine" id="cb18-32" title="32">        T = T / (<span class="dv">1</span> + beta * T)</a>
+<a class="sourceLine" id="cb18-33" title="33">    return best_weights </a></code></pre></div>
+<div class="sourceCode" id="cb19" data-caption="Pseudocódigo del operador de mutación/perturbación para Enfriamiento Simulado"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb19-1" title="1"><span class="kw">function</span> mutate(weights):</a>
+<a class="sourceLine" id="cb19-2" title="2">    candidate = copy(weights)</a>
+<a class="sourceLine" id="cb19-3" title="3">    index = get_random_index(length(weights))</a>
+<a class="sourceLine" id="cb19-4" title="4">    perturbation = get_random_normal_scalar(<span class="dv">0</span>, <span class="dv">0.3</span>)</a>
+<a class="sourceLine" id="cb19-5" title="5">    candidate[index] = clip(candidate[index] + perturbation, <span class="dv">0</span>, <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb19-6" title="6">    return candidate</a></code></pre></div>
+<h2 id="evolución-diferencial">Evolución Diferencial</h2>
+<div class="sourceCode" id="cb20" data-caption="Pseudocódigo del algoritmo de Evolución Diferencial"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb20-1" title="1"><span class="kw">function</span> de(X, y, iters, strategy, mut, crossp, popsize):</a>
+<a class="sourceLine" id="cb20-2" title="2">    N = X.shape[<span class="dv">1</span>]</a>
+<a class="sourceLine" id="cb20-3" title="3">    pop = np.random.rand(popsize, N)</a>
+<a class="sourceLine" id="cb20-4" title="4">    fitness = np.asarray([evaluate(ind, X, y) <span class="kw">for</span> ind <span class="kw">in</span> pop])</a>
+<a class="sourceLine" id="cb20-5" title="5">    best_idx = np.argmax(fitness)</a>
+<a class="sourceLine" id="cb20-6" title="6">    best = pop[best_idx]</a>
+<a class="sourceLine" id="cb20-7" title="7">    <span class="kw">for</span> _ <span class="kw">in</span> range(iters):</a>
+<a class="sourceLine" id="cb20-8" title="8">        <span class="kw">for</span> j <span class="kw">in</span> range(popsize):</a>
+<a class="sourceLine" id="cb20-9" title="9">            mutant = strategy(best_idx, j, pop, mut)</a>
+<a class="sourceLine" id="cb20-10" title="10">            cross_points = np.random.rand(N) &lt; crossp</a>
+<a class="sourceLine" id="cb20-11" title="11">            trial = np.where(cross_points, mutant, pop[j])</a>
+<a class="sourceLine" id="cb20-12" title="12">            f = evaluate(trial, X, y)</a>
+<a class="sourceLine" id="cb20-13" title="13">            <span class="kw">if</span> f &gt; fitness[j]:</a>
+<a class="sourceLine" id="cb20-14" title="14">                fitness[j] = f</a>
+<a class="sourceLine" id="cb20-15" title="15">                pop[j] = trial</a>
+<a class="sourceLine" id="cb20-16" title="16">                <span class="kw">if</span> f &gt; fitness[best_idx]:</a>
+<a class="sourceLine" id="cb20-17" title="17">                    best_idx = j</a>
+<a class="sourceLine" id="cb20-18" title="18">                    best = trial</a>
+<a class="sourceLine" id="cb20-19" title="19">    return best</a></code></pre></div>
+<div class="sourceCode" id="cb21" data-caption="Pseudocódigo de los operadores de mutación para DE"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb21-1" title="1"><span class="kw">function</span> rand_one(current_idx, pop, mut):</a>
+<a class="sourceLine" id="cb21-2" title="2">    indices = permutation(length(pop))[<span class="dv">0</span>:<span class="dv">3</span>]</a>
+<a class="sourceLine" id="cb21-3" title="3">    a, b, c = pop[indices]</a>
+<a class="sourceLine" id="cb21-4" title="4">    candidate = a + mut * (b - c)</a>
+<a class="sourceLine" id="cb21-5" title="5">    return np.clip(candidate, <span class="dv">0</span>, <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb21-6" title="6"></a>
+<a class="sourceLine" id="cb21-7" title="7"></a>
+<a class="sourceLine" id="cb21-8" title="8"><span class="kw">function</span> current_to_best_one(best_idx, current_idx, pop, mut):</a>
+<a class="sourceLine" id="cb21-9" title="9">    indices = permutation(length(pop))[<span class="dv">0</span>:<span class="dv">2</span>]</a>
+<a class="sourceLine" id="cb21-10" title="10">    a, b = pop[indices]</a>
+<a class="sourceLine" id="cb21-11" title="11">    x = pop[current_idx]</a>
+<a class="sourceLine" id="cb21-12" title="12">    best = pop[best_idx]</a>
+<a class="sourceLine" id="cb21-13" title="13">    candidate = x + mut * (best - x) + mut * (a - b)</a>
+<a class="sourceLine" id="cb21-14" title="14">    return clip(candidate, <span class="dv">0</span>, <span class="dv">1</span>)</a></code></pre></div>
+<h1 id="algoritmo-de-comparación">Algoritmo de comparación</h1>
+<h2 id="relief">Relief</h2>
+<p>La implementación del algoritmo greedy Relief es bastante sencilla. Para cada muestra en el conjunto de entrenamiento calculamos el amigo (sin contar el mismo) y el enemigo más próximos, y actualizamos el vector de pesos con las distancias de cada uno hacia el punto en cuestión.</p>
+<div class="sourceCode" id="cb22" data-caption="Pseudocódigo del algoritmo greedy Relief"><pre class="sourceCode pascal"><code class="sourceCode pascal"><a class="sourceLine" id="cb22-1" title="1"><span class="kw">function</span> relief(X, Y):</a>
+<a class="sourceLine" id="cb22-2" title="2">    w = <span class="co">{0, 0,..., 0}</span></a>
+<a class="sourceLine" id="cb22-3" title="3">    <span class="kw">for</span> i=<span class="dv">0</span> <span class="kw">to</span> rows_count(X):</a>
+<a class="sourceLine" id="cb22-4" title="4">        x, y = X[i], Y[i]</a>
+<a class="sourceLine" id="cb22-5" title="5">        X_same_<span class="kw">class</span> = X[Y == y]</a>
+<a class="sourceLine" id="cb22-6" title="6">        X_other_<span class="kw">class</span> = X[Y != y]</a>
+<a class="sourceLine" id="cb22-7" title="7">        kdtree1 = build_KDTree(X_same_class)</a>
+<a class="sourceLine" id="cb22-8" title="8">        kdtree2 = build_KDTree(X_other_class)</a>
+<a class="sourceLine" id="cb22-9" title="9">        ally = kdtree1.query(x, k=<span class="dv">2</span>)[<span class="dv">1</span>]</a>
+<a class="sourceLine" id="cb22-10" title="10">        enemy = kdtree2.query(x, k=<span class="dv">1</span>)[<span class="dv">0</span>]</a>
+<a class="sourceLine" id="cb22-11" title="11">        ally = X_same_class[ally]</a>
+<a class="sourceLine" id="cb22-12" title="12">        enemy = X_other_class[enemy]</a>
+<a class="sourceLine" id="cb22-13" title="13">        w += abs(x - enemy) - abs(x - ally)</a>
+<a class="sourceLine" id="cb22-14" title="14">    w = clip(w)</a>
+<a class="sourceLine" id="cb22-15" title="15">    w = w * (<span class="dv">1</span> / max(w))</a>
+<a class="sourceLine" id="cb22-16" title="16">    return w</a></code></pre></div>
+<p>Como se puede observar, el algoritmo crea dos árboles KDTree en cada iteración lo cuál no es muy eficiente. El forma ideal sería crear un árbol para cada clase antes del bucle y utilizarlos dentro del bucle, pero el algoritmo de por sí ya es bastante eficiente y por legibilidad del código se ha descartado esa opción.</p>
+<h1 id="proceso-de-desarrollo">Proceso de desarrollo</h1>
+<p>Para la implementación de todos los algoritmos, se ha utilizado <strong>Python3</strong>. Las principales fuentes de información utilizadas para el desarrollo han sido el seminario, el guión de prácticas y la documentación oficial de Python y los diferentes paquetes utilizados.</p>
+<p>Con el fin de reutilizar todo el código posible, he hecho uso extensivo de la biblioteca de cálculo numérico y manejo de arrays <strong>Numpy</strong>. Esto ha permitido tener una implementación limpia y concisa con una velocidad de ejecución aceptable en comparación con otros lenguajes como C.</p>
+<p>Para la implementación de los algoritmos evolutivos se ha utilizado el framework DEAP, que permite de una forma limpia y eficiente implementar todo tipo de estrategias evolutivas. Se ha usado además para reutilizar algunos operadores como el torneo binario.</p>
+<p>También he utilizado algunos <strong>profilers</strong> tanto a nivel de función como a nivel de línea, para detectar los cuellos de botella en el algoritmo de Búsqueda Local y determinar finalmente que partes había que optimizar. Como era de esperar esas partes eran relativas a la función fitness, sobre todo calcular la precisión del clasificador. Por este motivo hice una búsqueda sobre las formas más eficientes de calcular los vecinos y encontré la estructura de datos <strong>KDTree</strong>. El uso de la misma ha permitido tener una implementación más eficiente que usando el típico algoritmo de fuerza bruta.</p>
+<p>Además, se realizaron algunas pruebas para optimizar el código compilando parte del mismo usando Cython, Numba y Pythran las cuáles, desgraciadamente, no resultaron exitosas y las mejoras que ofrecían no justificaban la complicación en cuanto a desarrollo y distribución del proyecto.</p>
+<p>Finalmente, una vez desarrollado los algoritmos, se envolvieron en una clase con una interfaz similar a los objetos de Scikit-Learn para permitir una integración sencilla con el resto del código. Con estas dos clases, ya se implementó el programa principal.</p>
+<p>El programa principal (<em>practica3.py</em>) tiene varias funcionalidades interesantes. La primera de ellas es la <strong>validación en paralelo</strong> de los clasificadores y salida bien formateada de los resultados. El programa una vez obtenidos los resultados genera unos gráficos en formato PNG que se almacenan en la carpeta <strong>output</strong>. Los resultados se pueden también exportar en formato “xslx” de Excel. El programa ofrece una validación de los argumentos recibidos, así como una página de ayuda.</p>
+<h1 id="manual-de-usuario"><a href="https://www.antoniomolner.com/practicas_mh_ugr/">Manual de usuario</a></h1>
+<p>Antes de continuar con el manual de usuario me gustaría comentar, que debido al crecimiento del proyecto a lo largo de las sesiones de prácticas, me he tomado la molestia de escribir un página de documentación online. En la que se explica de manera estructurada todos los módulos correspondientes del proyecto, así como su instalación. Puede consultar la documentación en este <a href="https://www.antoniomolner.com/practicas_mh_ugr/">sitio</a>. Aunque le recomiendo visitar la documentación online, en el resto de sección también se explica como instalar y ejecutar el proyecto.</p>
+<p>Para poder ejecutar el proyecto es necesario tener instalado <strong>Python3</strong>. El proyecto no está testeado sobre Anaconda aunque posiblemente funcione. Únicamente requiere tener el intérprete y el instalador de paquetes <strong>pip</strong> que suele venir por defecto.</p>
+<p>El proyecto tiene una serie de dependencias que son necesarias para poder ejecutarlo. Mi recomendación es utilizar un entorno virtual de Python para instalar las dependencias y así no interferir con los paquetes globales. En el directorio del proyecto <strong>FUENTES</strong>, existe un Makefile que crea el entorno virtual e instala los paquetes localmente. Los paquetes a instalar se encuentra en el fichero “requirements.txt”. La lista es larga pero realmente no se utilizan tantos paquetes explícitamente. Lo que recoge ese archivo son las dependencias y las “dependencias de las dependencias” con sus versiones correspondientes para evitar incompatibilidades.</p>
+<p>A efectos prácticos, hay que ejecutar únicamente lo siguiente (dentro del directorio FUENTES):</p>
+<div class="sourceCode" id="cb23" data-caption="Ejecución del script para instalar las dependencias"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb23-1" title="1"><span class="fu">make</span> install</a>
+<a class="sourceLine" id="cb23-2" title="2"><span class="bu">source</span> ./env/bin/activate</a></code></pre></div>
+<blockquote>
+<p><strong>Nota:</strong> Si se produce un error al instalar el módulo pykdtree es porque su compilador por defecto no soporta OpenMP. Este error se puede obviar ya que la aplicación usará otro módulo en su lugar.</p>
+</blockquote>
+<p>Una vez instalado todo, ya se puede utilizar el programa principal. Este programa tiene varios parámetros que se deben especificar: el conjunto de datos, el algoritmo a usar, número de procesos a ejecutar en paralelo, etc. En cualquier momento podemos acceder a la ayuda con <strong>-h</strong>.</p>
+<div class="sourceCode" id="cb24" data-caption="Salida de la página de ayuda"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb24-1" title="1"><span class="ex">python3</span> practica2.py -h</a>
+<a class="sourceLine" id="cb24-2" title="2"><span class="ex">usage</span>: practica2.py [-h] [--seed SEED] [--n_jobs <span class="dt">{1,2,3,4}</span>] [--trace]</a>
+<a class="sourceLine" id="cb24-3" title="3">                    [<span class="ex">--to_excel</span>]</a>
+<a class="sourceLine" id="cb24-4" title="4">                    <span class="ex">dataset</span></a>
+<a class="sourceLine" id="cb24-5" title="5">                    {<span class="ex">knn</span>,relief,local-search,</a>
+<a class="sourceLine" id="cb24-6" title="6">                    <span class="ex">agg-blx</span>,agg-ca,age-blx,age-ca,</a>
+<a class="sourceLine" id="cb24-7" title="7">                    <span class="ex">AM-</span>(1,1.0),<span class="ex">AM-</span>(1,0.1),<span class="ex">AM-</span>(1,0.1mej)}</a>
+<a class="sourceLine" id="cb24-8" title="8"></a>
+<a class="sourceLine" id="cb24-9" title="9"><span class="ex">positional</span> arguments:</a>
+<a class="sourceLine" id="cb24-10" title="10">  <span class="ex">dataset</span>               Predefined datasets or a csv file</a>
+<a class="sourceLine" id="cb24-11" title="11">  {<span class="ex">knn</span>,relief,local-search,agg-blx,agg-ca,age-blx,age-ca,</a>
+<a class="sourceLine" id="cb24-12" title="12">    <span class="ex">AM-</span>(1,1.0),<span class="ex">AM-</span>(1,0.1),<span class="ex">AM-</span>(1,0.1mej)} <span class="ex">Algorithm</span> to use for feature weighting</a>
+<a class="sourceLine" id="cb24-13" title="13"></a>
+<a class="sourceLine" id="cb24-14" title="14"><span class="ex">optional</span> arguments:</a>
+<a class="sourceLine" id="cb24-15" title="15">  <span class="ex">-h</span>, --help            show this help message and exit</a>
+<a class="sourceLine" id="cb24-16" title="16">  <span class="ex">--seed</span> SEED           Seed to initialize the random generator (default:</a>
+<a class="sourceLine" id="cb24-17" title="17">                        <span class="ex">77766814</span>)</a>
+<a class="sourceLine" id="cb24-18" title="18">  <span class="ex">--n_jobs</span> <span class="dt">{1,2,3,4}</span>    Number of jobs to run in parallel to evaluate</a>
+<a class="sourceLine" id="cb24-19" title="19">                        <span class="ex">partitions.</span> (default: 1)</a>
+<a class="sourceLine" id="cb24-20" title="20">  <span class="ex">--trace</span>               Generate trace for local search (default: False)</a>
+<a class="sourceLine" id="cb24-21" title="21">  <span class="ex">--to_excel</span>            Dump results into xlsx file (default: False)</a></code></pre></div>
+<p>Así, si queremos ejecutar el algoritmo de AM-(1,1.0) con el conjunto de datos Colposcopy, la semilla 1, y en paralelo, ejecutaríamos lo siguiente:</p>
+<pre data-caption="Salida del programa principal"><code>python3 practica2.py colposcopy &#39;AM-(1,1.0)&#39; --seed=1 --n_jobs=4
+
+    COLPOSCOPY     |     AM-(1,1.0)      |  SEED = 1
+=======================================================
+             Accuracy  Reduction  Aggregation       Time
+Partition 1  0.694915   0.951613     0.823264  10.574860
+Partition 2  0.666667   0.935484     0.801075  10.933312
+Partition 3  0.631579   0.935484     0.783531  11.138601
+Partition 4  0.666667   0.935484     0.801075  10.324892
+Partition 5  0.719298   0.951613     0.835456   6.054140
+
+         Accuracy  Reduction  Aggregation       Time
+Mean     0.675825   0.941935     0.808880   9.805161
+Std.Dev  0.033090   0.008834     0.020479   2.120348
+Median   0.666667   0.935484     0.801075  10.574860</code></pre>
+<blockquote>
+<p><strong>NOTA:</strong> La semilla por defecto es 77766814. Es la semilla utilizada para el análisis de resultados.</p>
+</blockquote>
+<p>El parámetro <em>–trace</em> es muy interesante ya que puesto a True, permite generar un gráfico de como varía la función fitness a lo largo de las iteraciones. Obviamente no es aplicable para Relief. Un ejemplo de gráfico es el siguiente:</p>
+<p><img src="./img/trace.png" /></p>
+<p>Además, la aplicación puede leer cualquier archivo <strong>csv</strong>, en el parámetro dataset únicamente hay que especificar el path del archivo. El único requisito es que la variable a predecir se encuentre en la última columna. Esta variable no hace falta que esté codificada en enteros, puede ser cualquier variable categórica, el sistema se encarga de codificarla.</p>
+<p>El Makefile contenido dentro del directorio FUENTES también sirve para ejecutar todos los algoritmos a la vez:</p>
+<div class="sourceCode" id="cb26" data-caption="Ejecución de todos los algoritmos"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb26-1" title="1"><span class="fu">make</span> run_all</a></code></pre></div>
+<p>GNU Make puede ejecutar varias recetas de forma paralela, pero por defecto lo realiza secuencialmente. Si su procesador es óptimo para el paralelismo, puede ahorrarse tiempo y ejecutar varios algoritmos a la vez:</p>
+<div class="sourceCode" id="cb27" data-caption="Ejemplo de paralelización con GNU Make"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb27-1" title="1"><span class="fu">make</span> --jobs=4 run_all</a></code></pre></div>
+<h1 id="experimentos-y-análisis-de-resultados">Experimentos y Análisis de resultados</h1>
+<h2 id="descripción-de-los-casos-del-problema">Descripción de los casos del problema</h2>
+<p>Los conjuntos de datos utilizados son los siguientes:</p>
+<ol type="1">
+<li><p><strong>Colposcopy:</strong> Este conjunto de datos tiene 287 muestras y 62 características reales extraídas de imágenes colposcópicas. El objetivo es clasificar entre positivo y negativo (clasificación binaria).</p></li>
+<li><p><strong>Ionosphere</strong>: Este conjunto consta de 352 muestras y 34 características extraídas de datos de radares. Al igual que el conjunto anterior, la variable explicada es categórica binaria.</p></li>
+<li><p><strong>Texture</strong>: Diferentes imágenes de texturas se han procesado para extraer 550 muestras y 40 atributos. En este caso la clasificación es entre 11 categorías distintas.</p></li>
+</ol>
+<h2 id="resultados-obtenidos">Resultados obtenidos</h2>
+<p>Para realizar los experimentos se utilizado una semilla específica, mi DNI: 77766814. La semilla se ha utilizado tanto para los algoritmos probabilísticos como para crear las particiones k-fold del conjunto de datos. La funcionalidad de ejecutar la validación en paralelo está implementada y funciona correctamente, pero se ha utilizado un único proceso para evaluar todas las particiones y así, obtener tiempos mínimos de cada algoritmo. Los resultados de la ejecución de los algoritmos son los siguientes:</p>
+<p><embed src="./img/tables.pdf" /></p>
+<h2 id="análisis-de-los-resultados">Análisis de los resultados</h2>
+<p>Antes de continuar con el análisis de los resultados es importante mencionar que las muestras recogidas, pese a haberse obtenido en las mismas condiciones (misma semilla), son bastante pequeñas. Se han realizado únicamente 5 particiones por conjunto de datos, lo que nos da una muestra demasiado pequeña que nos impide realizar cualquier test de hipótesis paramétrico. Incluso si realizásemos un test no paramétrico como el test Anderson-Darling, las conclusiones podrían no ser correctas y podríamos cometer errores de Tipo I o Tipo 2 (falsos positivos o falsos negativos).</p>
+<p>Por lo explicado anteriormente, cualquier conclusión que saquemos con los datos recogidos pueden no ser extrapolables al resto de situaciones. Aún así, es importante comparar los resultados para entender que algoritmos funcionan mejor sobre nuestros conjuntos de datos específicos y sus particiones correspondientes.</p>
+<p>En primer lugar, vemos que el algoritmo 1-NN básico aporta un porcentaje de precisión alto en los casos <em>Ionosphere</em> y <em>Texture</em> y un porcentaje no tan alto en el conjunto <em>Colposcopy</em>. Si bien la métrica de la precisión puede ser válida en <em>Texture</em>, para los otros dos conjuntos puede no funcionar tan bien. Lo ideal sería utilizar alguna otra métrica como AUC, F1-Score, etc. Pero como nuestro objetivo es comparar diferentes algoritmos que utilizan la misma métrica, este detalle no es relevante.</p>
+<p>Empezamos hablando del conjunto de datos <strong>Colposcopy.</strong> Sin duda es el conjunto con menor tasa de clasificación y reducción de los tres conjuntos. Para este caso vemos que el clasificador básico tiene una precisión muy próxima a la del resto de algoritmos. De hecho, supera en precisión a todos los algoritmos, excepto a Relief. Para este último, sorprendentemente, en ese conjunto la reducción es considerable y la precisión se mantiene con respecto a 1-NN, por tanto, podríamos decir que funciona bastante bien para este dataset en concreto. Para el resto de algoritmos es importante recalcar una cosa. Para búsqueda local por ejemplo, la diferencia de precision entre 1-NN y este algoritmo, es de tan solo 3%. Es decir, hemos perdido un 3% de precisión usando únicamente el 23% de las características. Esto implica que nuestro algoritmo posiblemente vaya a generalizar mucho mejor que el clasificador 1-NN y el coste computacional de predecir nuevos valores se va a reducir drásticamente. El inconveniente principal de estos algoritmos en este conjunto de datos (y en general), es el tiempo de ejecución. Para obtener los pesos correspondientes tarda de media ~8s (búsqueda local), lo cuál es bastante mayor que los otros dos algoritmos comparados aunque no es un tiempo desmesurado. Algo similar pasa con los algoritmos evolutivos. Fijándonos ahora en el fitness, los algoritmos genéticos, los estacionarios y los generacionales tienen tasas de agregación similares. El único que destaca es AGG-BLX, pero ni siquiera supera a la búsqueda local. Podríamos decir que los los genéticos no funcionan bien en ese conjunto. Otro inconveniente principal es el tiempo que tarda en ejecutarse. Son los algoritmos más lentos. Por otro lado, el algoritmo AM-(1,1.0) tiene un fitness superior a la búsqueda local y tarda unos pocos segundos menos que el algoritmo genético más rápido. En cualquiera de los casos, no merece la pena la mejora respecto a BL para el tiempo de ejecución que consumen.</p>
+<p>Para el conjunto de datos <strong>Ionosphere</strong>, tenemos que la mayoría de algoritmos evolutivos superan o igualan a la búsqueda local. Mientras que para Texture, la búsqueda local es el algoritmo con mayor tasa de agregación. Fijándonos en la tabla general y tomando como referencia los tres conjuntos de datos, dentro de los algoritmos evolutivos, el mejor relación fitness-tiempo sería el algoritmo AM-(1,1.0). Este algoritmo suele tener tasas de agregación de las mas altas, y un tiempo de cómputo de los más bajos. Desgraciadamente, los algoritmos evolutivos aquí implementados se quedan un poco atrás con respecto a la búsqueda local. La mejora es mínima mientras que el tiempo de cómputo se dispara.</p>
+<p>Aunque tampoco hay que ser negativo. Los algoritmos evolutivos tienen varias ventajas respecto a la búsqueda local. La primera de ellas, es que se pueden diseñar estrategias y operadores específicos. Para nuestros algoritmos hemos utilizado operadores y estrategias comunes, pero podríamos adaptarlos a este problema consiguiendo mejoras considerables. Además, otro factor muy importante es la paralelización. Estos algoritmos evolutivos son muy escalables ya que permiten paralelizar la evaluación de los individuos. Esto nos permite aprovechar todo el poder de cómputo de nuestra máquina/cluster y poder tener poblaciones más grandes o un número mayor de generaciones. En cualquiera de los dos casos, la mejora es considerable. Para búsqueda local como cada solución depende de la anterior, estamos obligados a ejecutar secuencialmente el código.</p>
+<p>Lo importante de los algoritmos de APC que estamos implementado es que una vez calculado los pesos óptimos para un conjunto de datos, se validan, y quedan prefijados para el resto del desarrollo. Esto hace que en fases posteriores, realizar predicciones sea mucho más eficiente. Por otra parte, si nuestro objetivo es la inferencia, podemos saber que características tienen más importancia que otras cuando nos enfrentamos a algoritmos de aprendizaje “black-box”, los cuales son difíciles de interpretar, pero con estos métodos podemos desentrañar parte de la información que aprenden. Por estos motivos, los altos tiempos de ejecución de estos algoritmos, los cuáles en realidad no son tan altos comparados con técnicas como hyperparametrización, no deben ser limitantes a la hora de usarlo como parte de un flujo de trabajo en Aprendizaje Automático. Sobre todo, los algoritmos evolutivos que comentábamos anteriormente, los cuáles pueden requerir de mayor potencia de cómputo pero que pueden escalar y encontrar soluciones muy buenas. Al fin y al cabo, es un proceso que se realiza pocas veces en un flujo de trabajo.</p>
+<p>Como conclusión final, podríamos decir que usar una buena implementación de estos algoritmos que sea escalable para problemas reales con espacios dimensionales más grandes que los aquí utilizados, puede ser una buena estrategia para reducir la dimensionalidad del problema, mejorar la eficiencia en predicciones, interpretar modelos “black-box” o reducir la varianza.</p>
+<h2 id="convergencia">Convergencia</h2>
+<p>Uno de los aspectos que yo considero relevante para el análisis de un algoritmo es la convergencia. A continuación se mostrarán unos gráficos de las trazas de los diferentes algoritmos. Para búsqueda local se ha utilizado el valor fitness de la solución, mientras que en los evolutivos, la traza corresponde al fitness del mejor individuo de la población a lo largo de las generaciones.</p>
+<figure>
+<img src="./img/traces1.jpg" alt="Convergencia Algoritmos (1)" /><figcaption>Convergencia Algoritmos (1)</figcaption>
+</figure>
+<figure>
+<img src="./img/traces2.jpg" alt="Convergencia Algoritmos (1)" /><figcaption>Convergencia Algoritmos (1)</figcaption>
+</figure>
+<figure>
+<img src="./img/traces3.jpg" alt="Convergencia Algoritmos (1)" /><figcaption>Convergencia Algoritmos (1)</figcaption>
+</figure>
+<p>Estos gráficos reflejan la relevancia de las particiones en los conjuntos de datos. Como vemos, el valor de la función fitness aumenta rápidamente en las primeras iteraciones y posteriormente se estabiliza lo que nos da un indicio de que el algoritmo ha convergido o ronda muy próximo a un máximo local. Como vemos en cada partición se llega a un máximo distinto. Esto es debido a que cada partición representa un conjunto de datos totalmente distinto y por tanto la función fitness tiene una geometría distinta. En todas las particiones se utiliza el mismo valor de inicialización, por tanto el punto de inicio es el mismo para todas las particiones, haciendo que este factor no influya.</p>
+<p>Por otra parte vemos que todas las particiones para un mismo algoritmo, siguen la misma tendencia. Es cierto para cada partición se llega a un máximo distinto, pero la forma con la que llega es similar. Esto nos permite analizar el comportamiento de cada algoritmo y sacar conclusiones independientemente de la semilla o las particiones que se han hecho.</p>
+<p>En la <strong>Figura 4</strong>, se puede observar como los algoritmos genéticos difieren bastante en su traza. Para los generacionales, la traza es muy similar a la de la búsqueda local. Por otra parte, los algoritmos estacionarios, al seleccionar únicamente dos individuos, requieren de muchas más generaciones para converger.</p>
+<p>En la <strong>Figura 5</strong>, vemos como también existen diferencias entre los algoritmos meméticos. Para la version AM-(1,1.0), la traza es muy similar a los AGG y a la búsqueda local, aunque con saltos más pronunciados. Esto es debido a que se sigue también un esquema generacional, pero se mejora toda la población cada cierto tiempo, haciendo un incremento del fitness del mejor individuo que corresponde con esos saltos pronunciados. Esto se puede observar viendo el gráfico donde los saltos corresponden a las generaciones múltiplo de 10.</p>
+<p>Por otro lado, tenemos los algoritmos meméticos donde únicamente se selecciona un individuo. Al igual que los estacionarios, como solo se selecciona un individuo para optimizar mediante búsqueda local, el número de generaciones aumenta. Y hace que parezca que tarda menos generaciones en converger. También es verdad, que ha efectos del número de evaluaciones, estos dos últimos algoritmos aumentan más rápidamente el fitness. Aunque requieran de más generaciones, realmente las evaluaciones de la función fitness son muy pocas.</p>
+<p>Por último, tenemos los algoritmos implementados en la práctica 3. Que son ISL, ES, y DE. Como podemos observar, la traza de ILS refleja perfectamente el comportamiento del algoritmo. Esas caídas periódicas del valor fitness representan la mutación que se realiza antes de aplicar la búsqueda local. Por otro lado,</p>
+<h2 id="análisis-de-tiempos">Análisis de tiempos</h2>
+<p>Como podemos observar en los resultados, los algoritmos evolutivos tienen un tiempo de ejecución mucho mayor que los algoritmos anteriores (búsqueda local, relief y 1-NN). Por ese motivo me gustaría analizar en profundidad el motivo de esta diferencia de tiempos.</p>
+<p>Tras ejecutar un profiler sobre Búsqueda local, AGG-BLX, AGE-BLX y AM-(1,1.0) para el conjunto de datos <em>Texture</em>, obtenemos los siguientes resultados:</p>
+<figure>
+<img src="img/pyinstrument_ls_texture.png" alt="Profiling de Búsqueda local" /><figcaption>Profiling de Búsqueda local</figcaption>
+</figure>
+<figure>
+<img src="img/pyinstrument_agg_blx.png" alt="Profiling de AGG-BLX" /><figcaption>Profiling de AGG-BLX</figcaption>
+</figure>
+<figure>
+<img src="img/pyinstrument_age_blx.png" alt="Profiling de AGE-BLX" /><figcaption>Profiling de AGE-BLX</figcaption>
+</figure>
+<figure>
+<img src="img/pyinstrument_am110.png" alt="Profiling de AM-(1,1.0)" /><figcaption>Profiling de AM-(1,1.0)</figcaption>
+</figure>
+<blockquote>
+<p>Nota: Los tiempos son mayores que en una ejecución normal por la sobrecarga del profiler.</p>
+</blockquote>
+<p>Como era de esperar, en todos los casos donde se pasa la mayor parte del tiempo es en la función fitness. Para Búsqueda local, el porcentaje es aún mayor, mientras que para los algoritmos evolutivo también hay una parte del tiempo que se emplea en la mutación, cruce y el resto de operadores. Pero realmente, la diferencia principal de tiempos recae en el número de evaluaciones. Para Búsqueda local, el criterio de parada hace que nunca lleguemos a evaluar los 15000 vecinos, mientras que con los algoritmos evolutivos esto siempre pasa. Si los algoritmos evolutivos se ejecutasen con el mismo número de evaluaciones (efectivas) que el algoritmo de búsqueda local, las diferencia de tiempo sería mucho menor.</p>
+<p>También decir que como hemos visto antes, hay una parte irreducible del tiempo. Que es el tiempo que dedica el algoritmo a los distintos operadores. Para la implementación que tenemos, los algoritmos evolutivos siempre van a tardar un poco más que la búsqueda local. Pero al reducir el número de evaluaciones, también se reduciría el número de cruces, mutaciones, etc. Por lo que la diferencia de tiempos, como he dicho antes, sería pequeña. Este tiempo irreducible se ve acentuado en los algoritmos estacionarios. Y es el motivo de que sean más lentos que el resto de algoritmos evolutivos. Como únicamente seleccionan dos hijos, las evaluaciones se disminuyen y aumenta enormemente el número de generaciones. Por ese motivo, prácticamente la mitad del tiempo se consume en copiar y operar con los individuos que en la evaluación del fitness.</p>
+<p>Otro factor también a tener en cuenta, es que los algoritmos evolutivos priorizan la <strong>exploración</strong> sobre la explotación. Si recordamos, nuestra función fitness valora de igual medida la reducción y la precisión. Esto hace que se evalúen constantemente soluciones “peores” donde la reducción es pequeña, comparado con Búsqueda local, por ejemplo. Esto hace que no se reduzcan muchas características al evaluar una solución y se tarde más en calcular la precisión con leave-one-out. Prueba de esto, es la diferencia de tiempos entre los meméticos y los genéticos estacionarios. Ambos evalúan la función fitness el mismo numero de veces. Sin embargo, los meméticos introducen un factor de explotación que hace que rápidamente los individuos de las generaciones tenga una reducción más alta.</p>
+<p>Por estos motivos, podemos concluir, para estos conjuntos de datos, que los algoritmos genéticos son los más lentos. Seguidos de los meméticos y de la Búsqueda local (en dicho orden). Los algoritmos meméticos son más rápidos que los genéticos porque eliminan parte de ese tiempo irreducible de aplicar mutación, cruce, etc. Y consume más tiempo en la parte de búsqueda local, que como bien sabemos es bastante eficiente.</p>
+<blockquote>
+<p>NOTA: Por tiempo irreducible se entiende aquel que no está relacionado directamente con la evaluacion. Es obvio que se puede optimizar esa parte del código, pero viendo el profiling, sabemos que el objetivo a optimizar es la función fitness. Lo llamamos irreducible porque no se puede eliminar. Por muy óptimo que sea dicha parte, siempre va a acarrear tiempo de cómputo extra comparado con la búsqueda local.</p>
+</blockquote>
+<h1 id="referencias-bibliográficas">Referencias bibliográficas</h1>
+<h2 id="entendimiento">Entendimiento</h2>
+<p>Al principio, pese a lo básico del algoritmo, no llegaba a comprender como funcionaba realmente Relief. Este paper me fue de gran ayuda:</p>
+<p><a href="https://www.academia.edu/2675771/RELIEF_Algorithm_and_Similarity_Learning_for_k-NN">RELIEF Algorithm and Similarity Learning for K-NN</a></p>
+<h2 id="implementación">Implementación</h2>
+<p>Para la implementación he utilizado la documentación oficial de Python y sus bibliotecas correspondientes:</p>
+<ul>
+<li><p><a href="https://docs.python.org/3/index.html">Python3 Docs</a></p></li>
+<li><p><a href="https://www.scipy.org/">Scipy-Suite</a></p></li>
+<li><p><a href="http://scikit-learn.sourceforge.net/stable/index.html">Scikit-Learn</a></p></li>
+<li><p><a href="https://joblib.readthedocs.io/en/latest/">joblib (Paralelismo)</a></p></li>
+<li><p><a href="https://stackoverflow.com/questions/48126771/nearest-neighbour-search-kdtree">KDTree</a></p></li>
+<li><p><a href="https://deap.readthedocs.io/en/master/index.html">Deap</a></p></li>
+</ul>

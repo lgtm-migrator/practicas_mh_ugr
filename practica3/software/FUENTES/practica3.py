@@ -2,7 +2,7 @@ from algorithms.evolutionary import EvolutionaryAlgorithm, MemeticAlgorithm
 from algorithms.local_search import LocalSearch
 from algorithms.relief import Relief
 from algorithms.ils import ILS
-from algorithms.simulated_anneling import SimulatedAnnealing
+from algorithms.simulated_annealing import SimulatedAnnealing
 from algorithms.differential_evolution import DifferentialEvolution
 
 import matplotlib.pyplot as plt

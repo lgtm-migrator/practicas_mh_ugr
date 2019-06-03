@@ -3,28 +3,64 @@ import numpy as np
 
 
 def rand_one(_, current_idx, pop, mut):
-    idxs = [idx for idx in range(len(pop)) if idx != current_idx]
-    a, b, c = pop[np.random.choice(idxs, 3, replace=False), :]
-    return np.clip(a + mut * (b - c), 0, 1)
+    """
+    Mutation function for rand/one strategy.
+
+    :param current_idx: Index of the individual to apply mutation.
+    :param pop: Current opulation (list)
+    :param mut: Mutation factor, also known as F.
+
+    :returns: a new mutated candidate
+    """
+    indices = np.random.permutation(len(pop))[0:3]
+    a, b, c = pop[indices, :]
+    candidate = a + mut * (b - c)
+    return np.clip(candidate, 0, 1)
 
 
 def current_to_best_one(best_idx, current_idx, pop, mut):
-    idxs = [idx for idx in range(len(pop)) if idx != current_idx]
-    a, b = pop[np.random.choice(idxs, 2, replace=False), :]
+    """
+    Mutation function for current-to-best/one strategy.
+
+    :param best_idx: Index of the best individual of the population.
+    :param current_idx: Index of the individual to apply mutation.
+    :param pop: Current opulation (list)
+    :param mut: Mutation factor, also known as F.
+
+    :returns: a new mutated candidate
+    """
+    indices = np.random.permutation(len(pop))[0:2]
+    a, b = pop[indices, :]
     x = pop[current_idx]
     best = pop[best_idx]
-    return x + mut * (best - x) + mut * (a - b)
+    candidate = x + mut * (best - x) + mut * (a - b)
+    return np.clip(candidate, 0, 1)
 
 
 def de(X, y, iters, strategy=rand_one, mut=0.5, crossp=0.5, popsize=50, seed=1):
+    """
+    Differential evolution algorithm.
+
+    :param X: Input data for fitness evaluation.
+    :param y: Input labels for fitness evaluation.
+    :param iters: Maximun number of generations.
+    :param strategy: Mutation strategy function.
+    :param mut: Mutation factor, also known as F.
+    :param crossp: Crossover probability for each gene individually.
+    :param popsize: Initial population size.
+    :param seed: Seed to feed the random number generator.
+    """
     np.random.seed(seed)
     N = X.shape[1]
     pop = np.random.rand(popsize, N)
     fitness = np.asarray([evaluate(ind, X, y) for ind in pop])
-    best_idx = np.argmin(fitness)
+    best_idx = np.argmax(fitness)
     best = pop[best_idx]
-    for _ in range(iters):
+    trace = np.zeros(popsize * iters)
+    for i in range(iters):
         for j in range(popsize):
+            best_fitness = fitness[best_idx]
+            trace[i * popsize + j] = best_fitness
             mutant = strategy(best_idx, j, pop, mut)
             cross_points = np.random.rand(N) < crossp
             trial = np.where(cross_points, mutant, pop[j])
@@ -32,10 +68,10 @@ def de(X, y, iters, strategy=rand_one, mut=0.5, crossp=0.5, popsize=50, seed=1):
             if f > fitness[j]:
                 fitness[j] = f
                 pop[j] = trial
-                if f > fitness[best_idx]:
+                if f > best_fitness:
                     best_idx = j
                     best = trial
-    return best
+    return best, trace
 
 
 class DifferentialEvolution(AlgorithmBase):
@@ -62,13 +98,11 @@ class DifferentialEvolution(AlgorithmBase):
     def fit(self, X, y):
         """
         Fit the a 1-NN model using Differential Evolution for feature weighting.
-        This algorithm uses Scipy.optimize function. That function is used for
-        minimizing. So, we need to use the inverse of our fitness function.
-        It is just -fitness(w, X, y)
 
         :param X: Train inputs
         :param y: Train labels
         """
         maxiter = int(self.max_evaluations / self.popsize)
-        weights = de(X, y, maxiter, self.strategy, seed=self.seed)
+        weights, trace = de(X, y, maxiter, self.strategy, seed=self.seed)
+        self.trace = trace
         super().set_feature_importances(weights)

@@ -464,10 +464,9 @@ function evaluate_population(population):
     return evaluations
 ```
 
-function evaluate\_population(population): Como vemos, devuelve el
-numero de evaluaciones de la función fitness. Esto sirve para parar la
-ejecución del algoritmo cuando se evalúa el fitness un cierto número de
-veces.
+Como vemos, devuelve el numero de evaluaciones de la función fitness.
+Esto sirve para parar la ejecución del algoritmo cuando se evalúa el fitness 
+un cierto número de veces.
 
 ### Toolbox
 
@@ -495,21 +494,23 @@ estrategia memética el algoritmo la ejecutará cada 10 generaciones.
 
 Para crear la estrategia memética partimos de la siguiente función:
 
-    def memetic_strategy(X, y, max_neighbours, seed, population, num_selected,
-                         prob, sort):
-        if sort:
-            candidates = tools.selBest(population, num_selected)
-        else:
-            candidates = population[:num_selected]
-        evaluations = 0
-        for ind in candidates:
-            if random() < prob:
-                new_ind, trace, n_generated = local_search(X, y, max_neighbours,
-                                                           0.3, seed, ind)
-                evaluations += n_generated
-                ind = new_ind[:]
-                ind.fitness = trace[len(trace) - 1]
-        return evaluations
+```python
+def memetic_strategy(X, y, max_neighbours, seed, population, num_selected,
+                     prob, sort):
+    if sort:
+        candidates = tools.selBest(population, num_selected)
+    else:
+        candidates = population[:num_selected]
+    evaluations = 0
+    for ind in candidates:
+        if random() < prob:
+            new_ind, trace, n_generated = local_search(X, y, max_neighbours,
+                                                       0.3, seed, ind)
+            evaluations += n_generated
+            ind = new_ind[:]
+            ind.fitness = trace[len(trace) - 1]
+    return evaluations
+```
 
 Esta función puede ejecutar todas las estrategias meméticas de esta
 práctica. Por ejemplo, para el algoritmo AM-(1,1.0), usamos prop = 1,
@@ -524,6 +525,179 @@ Como vemos, el desarrollo de estos algoritmos ha sido muy corto debido
 al uso extensivo de funciones genéricas para los algoritmos anteriores.
 Lo cuál a permitido introducir las estrategías meméticas sin necesidad
 de modificar en gran medida el código existente.
+
+
+Búsqueda Local Reiterada
+--------------------
+
+El primer algoritmo implementado es ILS. Siguiendo el pseudocódigo de los
+seminarios y teoría, se ha implementado una versión concisa aprovechando
+la búsqueda local implementada en las sesiones anteriores.
+La única diferencia en el uso de BL es que en este caso, obligamos
+al algoritmo a generar todos los vecinos (1000) en cada llamada, al contrario
+que en la versión inicial que se paraba cuando no existía mejora durante
+un cierto número de iteraciones.
+
+```{ .pascal caption="Pseudocódigo del algoritmo de Búsqueda Local Reiterada (ILS)"}
+function ils(X, y, iters):
+    init_weights = generate_random_uniform_vector()
+    weights = local_search(X, y, 1000, init_weights, early_stopping=False)
+    best_fitness = evaluate(weights, X, y)
+    for i=0...iters; do
+        candidate = mutate(weights)
+        candidate = local_search(X, y, 1000, candidate, early_stopping=False)
+        fitness = trace[-1]
+        if fitness > best_fitness; do
+            weights = candidate
+            best_fitness = fitness
+    return weights
+```
+
+
+El operador de mutación o perturbación utilizado en este algoritmo es el
+mismo que para búsqueda local, la mutación gaussiana. En este caso
+se mutan un 10% de las componentes aleatoriamente y se utiliza un sigma de 0.4 en lugar
+de 0.3. Al igual que en el resto de mutaciones, el resultado de la mutación se
+capa entre 0 y 1 para que el algoritmo funcione correctamente.
+
+```{ .pascal caption="Pseudocódigo del operador de mutación para ILS"}
+function mutate(weights):
+    candidate = copy(weights)
+    N = length(weights)
+    num_comp = N * 0.1
+    indices = get_random_indices(N, num_comp)
+    candidate[indices] += generate_gaussian_vector(0, 0.4, num_comp)
+    candidate = clip(candidate, 0, 1)
+    return candidate
+```
+
+
+Enfriamiento Simulado
+---------------------
+
+Este algoritmo, es bastante más complejo que el anterior. Empezamos
+comentando algunas particularidades. Para el cálculo de la temperatura
+inicial se sigue el siguiente esquema: $T_0 = 0.3 * f(inicial) / -ln(0.3)$.
+Donde $f(x)$ es nuestra función fitness. La temperatura inicial se calcula
+como el mínimo entre $1^{-3}$ y $T_0$, para que nunca sea la temperatura
+final mayor que la inicial.
+
+Por otro lado, existen varios criterios de parada. Para el bucle interno
+el criterio de parada es el número de evaluaciones de la función fitness
+y la temperatura actual. Mientras que en el bucle interno es el número
+de vecinos generados y el número de soluciones aceptadas (durante ese bucle).
+
+Finalmente el criterio de enfriamiento es Cauchy modificado donde tenemos
+que $T_{i+1} = T_i / (1 + \beta * T_i)$, para $\beta = (T_0 - T_f) / (M * T_0 * T_f)$.
+M es el número de enfriamientos a realizar, es decir el número máximo
+de evaluaciones a la función fitness, entre el número de vecinos que se
+genera en cada bucle interno.
+
+```{ .pascal caption="Pseudocódigo del algoritmo de Enfriamiento Simulado"}
+function annealing(X, y, max_eval):
+    weights = generate_random_uniform_vector()
+    best_weights = weights
+    fitness = evaluate(best_weights, X, y)
+    best_fitness = fitness
+    T0 = 0.3 * best_fitness / (-ln(0.3))
+    T = T0
+    Tf = clip(1e-3, 0, T0)
+    evaluations = 0
+    accepted = 1
+    max_neighbours = 10 * length(weights)
+    max_accepted = length(weights)
+    M = max_eval / max_neighbours
+    while evaluations < max_eval and accepted > 0 and T > Tf; do
+        accepted = 0
+        current_evals = 0
+        while current_evals < max_neighbours and accepted < max_accepted; do
+            current_evals += 1
+            w_prime = mutate(weights)
+            fitness_prime = evaluate(w_prime, X, y)
+            diff = fitness_prime - fitness
+            prob = exp(diff / T)
+            if diff > 0 or generate_random_uniform_scalar() < prob; do
+                weights = w_prime
+                fitness = fitness_prime
+                accepted += 1
+                if fitness > best_fitness; do
+                    best_fitness = fitness
+                    best_weights = weights
+        evaluations += current_evals
+        beta = (T0 - Tf) / (M * T0 * Tf)
+        T = T / (1 + beta * T)
+    return best_weights 
+```
+
+Para este algoritmo, la mutación es igual que para búsqueda local. Se realiza mutación
+gaussiana a un único componente del vector. Como siempre, se capa entre 0 y 1 al final.
+
+```{ .pascal caption="Pseudocódigo del operador de mutación/perturbación para Enfriamiento Simulado"}
+function mutate(weights):
+    candidate = copy(weights)
+    index = get_random_index(length(weights))
+    perturbation = get_random_normal_scalar(0, 0.3)
+    candidate[index] = clip(candidate[index] + perturbation, 0, 1)
+    return candidate
+```
+
+Evolución Diferencial
+---------------------
+
+El último algoritmo implementado en la sesión 3 es Evolución Diferencial.
+En este esquema similar al de los algoritmos evolutivos de la sesión anterior,
+tenemos una lista con la población inicial. En cada iteración/generación
+se mutan uno a uno todos los elementos de la población y se actualiza
+el mejor hasta el momento. Una vez obtenido una individuo mutado,
+se cruza (crossover) con el individuo actual de manera aleatoria gen a gen. La probabilidad de 
+cambiar un gen del individuo actual por el del mutante es de 0.5.
+
+```{ .pascal caption="Pseudocódigo del algoritmo de Evolución Diferencial"}
+function de(X, y, iters, strategy, mut, crossp, popsize):
+    N = X.shape[1]
+    pop = np.random.rand(popsize, N)
+    fitness = evaluate_population(pop)
+    best_idx = get_index_max_value(fitness)
+    best = pop[best_idx]
+    for _ in range(iters):
+        for j in range(popsize):
+            mutant = strategy(best_idx, j, pop, mut)
+            cross_points = generate_random_uniform_vector(N) < crossp
+            trial = where(cross_points, mutant, pop[j])
+            f = evaluate(trial, X, y)
+            if f > fitness[j]:
+                fitness[j] = f
+                pop[j] = trial
+                if f > fitness[best_idx]:
+                    best_idx = j
+                    best = trial
+    return best
+```
+
+Para la mutación se siguen dos estrategias distintas, las cuales se
+describen a continuación:
+
+```{ .pascal caption="Pseudocódigo de los operadores de mutación para DE"}
+function rand_one(current_idx, pop, mut):
+    indices = permutation(length(pop))[0:3]
+    a, b, c = pop[indices]
+    candidate = a + mut * (b - c)
+    return np.clip(candidate, 0, 1)
+
+
+function current_to_best_one(best_idx, current_idx, pop, mut):
+    indices = permutation(length(pop))[0:2]
+    a, b = pop[indices]
+    x = pop[current_idx]
+    best = pop[best_idx]
+    candidate = x + mut * (best - x) + mut * (a - b)
+    return clip(candidate, 0, 1)
+```
+
+Como se puede ver, en ambas estrategias se seleccionan varios individuos de la población
+de manera aleatoria y se combinan en base a un factor de mutación. Que en nuestro caso
+es de 0.5 también.
+
 
 Algoritmo de comparación
 ========================
@@ -571,12 +745,12 @@ documentación oficial de Python y los diferentes paquetes utilizados.
 
 Con el fin de reutilizar todo el código posible, he hecho uso extensivo
 de la biblioteca de cálculo numérico y manejo de arrays **Numpy**. Esto
-ha permitido tener una implementación limpia y concisa (\~300 lineas
-totales) con una velocidad de ejecución aceptable en comparación con
+ha permitido tener una implementación limpia y concisa
+con una velocidad de ejecución aceptable en comparación con
 otros lenguajes como C.
 
 Para la implementación de los algoritmos evolutivos se ha utilizado el
-framework DEAP, que permite de una forma concisa y eficiente implementar
+framework DEAP, que permite de una forma limpia y eficiente implementar
 todo tipo de estrategias evolutivas. Se ha usado además para reutilizar
 algunos operadores como el torneo binario.
 
@@ -601,7 +775,7 @@ clase con una interfaz similar a los objetos de Scikit-Learn para
 permitir una integración sencilla con el resto del código. Con estas dos
 clases, ya se implementó el programa principal.
 
-El programa principal (*practica2.py*) tiene varias funcionalidades
+El programa principal (*practica3.py*) tiene varias funcionalidades
 interesantes. La primera de ellas es la **validación en paralelo** de
 los clasificadores y salida bien formateada de los resultados. El
 programa una vez obtenidos los resultados genera unos gráficos en
@@ -688,7 +862,6 @@ siguiente:
 ``` {caption="Salida del programa principal"}
 python3 practica2.py colposcopy 'AM-(1,1.0)' --seed=1 --n_jobs=4
 
-=======================================================
     COLPOSCOPY     |     AM-(1,1.0)      |  SEED = 1
 =======================================================
              Accuracy  Reduction  Aggregation       Time
@@ -770,11 +943,9 @@ proceso para evaluar todas las particiones y así, obtener tiempos
 mínimos de cada algoritmo. Los resultados de la ejecución de los
 algoritmos son los siguientes:
 
-![](./img/tables_1.pdf)
 
-![](./img/tables_2.pdf)
+![](./img/tables.pdf)
 
-![](./img/tables_3.pdf)
 
 Análisis de los resultados
 --------------------------
@@ -898,6 +1069,8 @@ población a lo largo de las generaciones.
 
 ![Convergencia Algoritmos (1)](./img/traces2.jpg)
 
+![Convergencia Algoritmos (1)](./img/traces3.jpg)
+
 Estos gráficos reflejan la relevancia de las particiones en los
 conjuntos de datos. Como vemos, el valor de la función fitness aumenta
 rápidamente en las primeras iteraciones y posteriormente se estabiliza
@@ -931,7 +1104,7 @@ haciendo un incremento del fitness del mejor individuo que corresponde
 con esos saltos pronunciados. Esto se puede observar viendo el gráfico
 donde los saltos corresponden a las generaciones múltiplo de 10.
 
-Finalmente, tenemos los algoritmos meméticos donde únicamente se
+Por otro lado, tenemos los algoritmos meméticos donde únicamente se
 selecciona un individuo. Al igual que los estacionarios, como solo se
 selecciona un individuo para optimizar mediante búsqueda local, el
 número de generaciones aumenta. Y hace que parezca que tarda menos
@@ -939,6 +1112,24 @@ generaciones en converger. También es verdad, que ha efectos del número
 de evaluaciones, estos dos últimos algoritmos aumentan más rápidamente el
 fitness. Aunque requieran de más generaciones, realmente las evaluaciones
 de la función fitness son muy pocas.
+
+Por último, tenemos los algoritmos implementados en la práctica 3. Que son
+ISL, ES, y DE. Como podemos observar, la traza de ILS refleja perfectamente
+el comportamiento del algoritmo. Esas caídas periódicas del valor fitness
+representan la mutación que se realiza antes de aplicar la búsqueda local.
+Por otro lado, para el algoritmo de enfriamiento simulado vemos como se necesitan
+muy pocas iteraciones (enfriamientos) para converger en buenos resultados. Los valores
+en el eje de abscisas de esa figura representan la iteración del bucle externo,
+es decir el número de enfriamientos realizados.
+
+Los últimos algoritmos implementados que tenemos son los basados en Evolución diferencial,
+en concreto, con estrategias rand/one y current-to-best/one. Se podría decir que este último,
+junto a los meméticos son los más sensibles a las particiones de datos. Si nos fijamos, ambos
+algoritmos convergen muy rápido, en menos de 4000 evaluaciones, pero la estrategia current-to-best
+parece dar unos resultados muy distintos dependiendo de la partición. Lo curioso es que justo
+el otro algoritmo, rand/one, parece ser el algoritmo menos sensible a las particiones, dando
+valores fitness muy próximos, a la vez que altos, en todas las particiones. Esto indica que es
+un algoritmo muy robusto.
 
 Análisis de tiempos
 -------------------
