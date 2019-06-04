@@ -651,6 +651,8 @@ se mutan uno a uno todos los elementos de la población y se actualiza
 el mejor hasta el momento. Una vez obtenido una individuo mutado,
 se cruza (crossover) con el individuo actual de manera aleatoria gen a gen. La probabilidad de 
 cambiar un gen del individuo actual por el del mutante es de 0.5.
+Finalmente, se aplica el reemplazamiento one-to-one, es decir, se selecciona
+el mejor entre el padre y el hijo.
 
 ```{ .pascal caption="Pseudocódigo del algoritmo de Evolución Diferencial"}
 function de(X, y, iters, strategy, mut, crossp, popsize):
@@ -696,7 +698,14 @@ function current_to_best_one(best_idx, current_idx, pop, mut):
 
 Como se puede ver, en ambas estrategias se seleccionan varios individuos de la población
 de manera aleatoria y se combinan en base a un factor de mutación. Que en nuestro caso
-es de 0.5 también.
+es de 0.5 también. Para la primera, el nuevo individuo se calcula con la siguiente
+fórmula: $V_{i, G}=X_{r 1, G}+F \cdot\left(X_{r 2, G}-X_{r 3, G}\right)$, donde
+$r1, r2, r3$ son tres indices seleccionados aleatoriamente de la población actual
+(sin reemplazo). Y para el segundo operador, utilizamos la siguiente otra formula:
+$V_{i, G}=X_{i, G}+F \cdot\left(X_{best, G}-X_{i, G}\right)+F \cdot\left(X_{r 1, G}-X_{r 2, G}\right)$.
+De nuevo, los indices se calculan de manera aleatoria sin reemplazo (contando el índice del individuo
+actual). En este caso, utilizamos también el mejor individuo encontrado hasta el momento a la
+hora de generar el nuevo individuo.
 
 
 Algoritmo de comparación
@@ -940,8 +949,9 @@ probabilísticos como para crear las particiones k-fold del conjunto de
 datos. La funcionalidad de ejecutar la validación en paralelo está
 implementada y funciona correctamente, pero se ha utilizado un único
 proceso para evaluar todas las particiones y así, obtener tiempos
-mínimos de cada algoritmo. Los resultados de la ejecución de los
-algoritmos son los siguientes:
+mínimos de cada algoritmo. En la siguiente tabla se recogen los resultados
+de los algoritmos implementados en esta última práctica, junto con la tabla
+comparativa de todos los algoritmos.
 
 
 ![](./img/tables.pdf)
@@ -979,7 +989,7 @@ Empezamos hablando del conjunto de datos **Colposcopy.** Sin duda es el conjunto
 con menor tasa de clasificación y reducción de los tres conjuntos.
 Para este caso vemos que el clasificador básico tiene una
 precisión muy próxima a la del resto de algoritmos. De hecho, supera
-en precisión a todos los algoritmos, excepto a Relief. 
+en precisión a todos los algoritmos, excepto a ES y Relief. 
 Para este último, sorprendentemente, en ese conjunto la reducción es 
 considerable y la precisión se mantiene con respecto a 1-NN, por tanto, podríamos decir
 que funciona bastante bien para este dataset en concreto. Para el resto
@@ -1006,9 +1016,19 @@ genético más rápido. En cualquiera de los casos,
 no merece la pena la mejora respecto a BL para el tiempo de ejecución
 que consumen.
 
+Cuando hablamos de algoritmos evolutivos nos referimos a algoritmos genéticos
+y meméticos. Pero en la última sesión, se han implementado dos nuevos algoritmos
+de naturaleza evolutiva basados en Evolución Diferencial. Que sorprendentemente,
+uno de ellos (rand/one) es el algoritmo que mejor funciona para este conjunto de datos,
+superando por mucho al resto de algoritmos. Esto se debe principalmente a que ha conseguido
+una reducción por encima del 90% de media manteniendo una precisión similar al 1NN.
+Por otro lado, tenemos ILS y ES que funcionan peor que el algoritmo anterior, pero aun así
+tienen unas tasas de agregación por encima del resto de algoritmos. En el caso de ES,
+la relación fitness-tiempo es la mejor para ese conjunto.
+
 Para el conjunto de datos **Ionosphere**, tenemos que la mayoría de algoritmos
-evolutivos superan o igualan a la búsqueda local. Mientras que para Texture,
-la búsqueda local es el algoritmo con mayor tasa de agregación.
+evolutivos y los basados en trayectorias, superan o igualan a la búsqueda local.
+Aunque que para Texture, la búsqueda local supera a los algoritmos genéticos y meméticos.
 Fijándonos en la tabla general y tomando como referencia los tres conjuntos de datos,
 dentro de los algoritmos evolutivos, el mejor relación fitness-tiempo
 sería el algoritmo AM-(1,1.0). Este algoritmo suele tener tasas de 
@@ -1017,11 +1037,34 @@ Desgraciadamente, los algoritmos evolutivos aquí implementados se quedan
 un poco atrás con respecto a la búsqueda local. La mejora es mínima mientras
 que el tiempo de cómputo se dispara.
 
-Aunque tampoco hay que ser negativo. Los algoritmos evolutivos tienen varias
-ventajas respecto a la búsqueda local. La primera de ellas, es que 
-se pueden diseñar estrategias y operadores específicos. Para nuestros
+En general, los algoritmos ILS, DE y ES superan en la mayoría de los casos
+al resto de algoritmos. El único que parece no funcionar bien en ningún
+conjunto sería DE/current-to-best/one. Pero ese mismo algoritmo con la estrategia
+rand/one, es el algoritmo con mejor fitness de todos. De hecho, es el que mejor
+se comporta en todos los conjuntos de datos. Teniendo en cuenta que DE tarda menos
+de la mitad que el resto de algoritmos evolutivos en ejecutarse, se convierte en una
+de los mejores algoritmos de este análisis. Otro aspecto importante a destacar de este algoritmo,
+es que si nos fijamos en los resultados obtenidos, en todas las particiones se suelen llegar a
+valores fitness muy parecidos, incluso en Texture, todas las particiones tienen la misma
+tasa de reducción. Esto indica que el algoritmo es menos sensible a las particiones de los datos,
+y por tanto es muy robusto.
+
+Por otro lado, no podemos obviar el hecho de que ES,
+supera en todos los conjuntos a los algoritmos implementados en las dos prácticas anteriores,
+y tiene un tiempo de cómputo menor incluso que la búsqueda local. Igual que decimos
+que DE es el que mejor se comporta en terminos de agregación, ES es el mejor algoritmo
+en términos de relación tiempo-fitness. De hecho, es el algoritmo más prometedor, ya que
+tenemos una diferencia de tiempos tan grande con el resto, que nos podríamos permitir
+decrementar la temperatura final y realizar más iteraciones. Y posiblemente, llegase al mismo
+nivel o incluso superar a DE/rand/one.
+
+Aunque tampoco hay que ser negativo con los algoritmos genéticos y meméticos.
+Los algoritmos evolutivos tienen varias ventajas respecto a la búsqueda local.
+La primera de ellas, es que se pueden diseñar estrategias y operadores específicos. Para nuestros
 algoritmos hemos utilizado operadores y estrategias comunes, pero
 podríamos adaptarlos a este problema consiguiendo mejoras considerables.
+De hecho, podemos ver como DE, que también se considera evolutivo, tiene un
+comportamiento totalmente distinto cuando se utiliza un operador u otro.
 Además, otro factor muy importante es la paralelización. Estos algoritmos
 evolutivos son muy escalables ya que permiten paralelizar la evaluación
 de los individuos. Esto nos permite aprovechar todo el poder de cómputo
@@ -1053,7 +1096,12 @@ de estos algoritmos que sea escalable para problemas reales
 con espacios dimensionales más grandes que los aquí utilizados, puede
 ser una buena estrategia para reducir la dimensionalidad del problema,
 mejorar la eficiencia en predicciones, interpretar modelos "black-box" o
-reducir la varianza.
+reducir la varianza. En concreto, los algoritmos que yo implementaría para 
+una solución eficiente y robusta serían DE y ES, ya que de por sí dan unos buenos
+resultados. Aunque se podrían investigar también algunos operadores para los algoritmos
+genéticos y meméticos para mejorar su comportamiento. Y en el caso de que nuestro
+conjunto de datos sea muy grande y la función fitness sea muy costosa, se podrían
+incluso emplear otras alternativas como optimización bayesiana.
 
 Convergencia
 ------------
@@ -1113,7 +1161,7 @@ de evaluaciones, estos dos últimos algoritmos aumentan más rápidamente el
 fitness. Aunque requieran de más generaciones, realmente las evaluaciones
 de la función fitness son muy pocas.
 
-Por último, tenemos los algoritmos implementados en la práctica 3. Que son
+Por último, en la **Figura 6** tenemos los algoritmos implementados en la práctica 3. Que son
 ISL, ES, y DE. Como podemos observar, la traza de ILS refleja perfectamente
 el comportamiento del algoritmo. Esas caídas periódicas del valor fitness
 representan la mutación que se realiza antes de aplicar la búsqueda local.
@@ -1122,8 +1170,8 @@ muy pocas iteraciones (enfriamientos) para converger en buenos resultados. Los v
 en el eje de abscisas de esa figura representan la iteración del bucle externo,
 es decir el número de enfriamientos realizados.
 
-Los últimos algoritmos implementados que tenemos son los basados en Evolución diferencial,
-en concreto, con estrategias rand/one y current-to-best/one. Se podría decir que este último,
+Los últimos algoritmos implementados que tenemos son los basados en Evolución Diferencial,
+en concreto, las estrategias rand/one y current-to-best/one. Se podría decir que este último,
 junto a los meméticos son los más sensibles a las particiones de datos. Si nos fijamos, ambos
 algoritmos convergen muy rápido, en menos de 4000 evaluaciones, pero la estrategia current-to-best
 parece dar unos resultados muy distintos dependiendo de la partición. Lo curioso es que justo
@@ -1150,6 +1198,12 @@ resultados:
 ![Profiling de AGE-BLX](img/pyinstrument_age_blx.png)
 
 ![Profiling de AM-(1,1.0)](img/pyinstrument_am110.png)
+
+![Profiling de ES](img/pyinstrument_es.png)
+
+![Profiling de ILS](img/pyinstrument_ils.png)
+
+![Profiling de DE/rand/one](img/pyinstrument_de.png)
 
 >Nota: Los tiempos son mayores que en una ejecución normal por la sobrecarga
 del profiler.
