@@ -297,7 +297,7 @@ function binaryTournament(individuals, num_selected):
     for i = 0...num_selected do
         aspirants = selectRandomly(individuals, 2)
         // Añade el mejor de los dos seleccionados
-        chosen.append(max(aspirants, by=fitness_value)) 
+        chosen.append(max(aspirants, by=fitness_value))
     return chosen
 ```
 
@@ -444,7 +444,7 @@ function crossover_and_mutate(population, cxpb, mutpb):
         offspring[i], mutated = mutate(offspring[i])
         if mutated:
             // Invalida el fitness para calcularlo luego
-            delete offspring[i].fitness 
+            delete offspring[i].fitness
     return offspring
 ```
 
@@ -465,7 +465,7 @@ function evaluate_population(population):
 ```
 
 Como vemos, devuelve el numero de evaluaciones de la función fitness.
-Esto sirve para parar la ejecución del algoritmo cuando se evalúa el fitness 
+Esto sirve para parar la ejecución del algoritmo cuando se evalúa el fitness
 un cierto número de veces.
 
 ### Toolbox
@@ -530,8 +530,8 @@ de modificar en gran medida el código existente.
 Búsqueda Local Reiterada
 --------------------
 
-El primer algoritmo implementado es ILS. Siguiendo el pseudocódigo de los
-seminarios y teoría, se ha implementado una versión concisa aprovechando
+Siguiendo el pseudocódigo de los seminarios y teoría,
+se ha implementado una versión concisa aprovechando
 la búsqueda local implementada en las sesiones anteriores.
 La única diferencia en el uso de BL es que en este caso, obligamos
 al algoritmo a generar todos los vecinos (1000) en cada llamada, al contrario
@@ -557,7 +557,7 @@ function ils(X, y, iters):
 El operador de mutación o perturbación utilizado en este algoritmo es el
 mismo que para búsqueda local, la mutación gaussiana. En este caso
 se mutan un 10% de las componentes aleatoriamente y se utiliza un sigma de 0.4 en lugar
-de 0.3. Al igual que en el resto de mutaciones, el resultado de la mutación se
+de 0.3. Al igual que en el resto de mutaciones, el resultado se
 capa entre 0 y 1 para que el algoritmo funcione correctamente.
 
 ```{ .pascal caption="Pseudocódigo del operador de mutación para ILS"}
@@ -575,17 +575,17 @@ function mutate(weights):
 Enfriamiento Simulado
 ---------------------
 
-Este algoritmo, es bastante más complejo que el anterior. Empezamos
+Este algoritmo es bastante más complejo que el anterior. Empezamos
 comentando algunas particularidades. Para el cálculo de la temperatura
 inicial se sigue el siguiente esquema: $T_0 = 0.3 * f(inicial) / -ln(0.3)$.
 Donde $f(x)$ es nuestra función fitness. La temperatura inicial se calcula
-como el mínimo entre $1^{-3}$ y $T_0$, para que nunca sea la temperatura
+como el mínimo entre $10^{-3}$ y $T_0$, para que nunca sea la temperatura
 final mayor que la inicial.
 
-Por otro lado, existen varios criterios de parada. Para el bucle interno
+Por otro lado, existen varios criterios de parada. Para el bucle externo
 el criterio de parada es el número de evaluaciones de la función fitness
 y la temperatura actual. Mientras que en el bucle interno es el número
-de vecinos generados y el número de soluciones aceptadas (durante ese bucle).
+de vecinos generados y el número de soluciones aceptadas (entre cada enfriamiento).
 
 Finalmente el criterio de enfriamiento es Cauchy modificado donde tenemos
 que $T_{i+1} = T_i / (1 + \beta * T_i)$, para $\beta = (T_0 - T_f) / (M * T_0 * T_f)$.
@@ -626,7 +626,7 @@ function annealing(X, y, max_eval):
         evaluations += current_evals
         beta = (T0 - Tf) / (M * T0 * Tf)
         T = T / (1 + beta * T)
-    return best_weights 
+    return best_weights
 ```
 
 Para este algoritmo, la mutación es igual que para búsqueda local. Se realiza mutación
@@ -649,7 +649,7 @@ En este esquema similar al de los algoritmos evolutivos de la sesión anterior,
 tenemos una lista con la población inicial. En cada iteración/generación
 se mutan uno a uno todos los elementos de la población y se actualiza
 el mejor hasta el momento. Una vez obtenido una individuo mutado,
-se cruza (crossover) con el individuo actual de manera aleatoria gen a gen. La probabilidad de 
+se cruza (crossover) con el individuo actual de manera aleatoria gen a gen. La probabilidad de
 cambiar un gen del individuo actual por el del mutante es de 0.5.
 Finalmente, se aplica el reemplazamiento one-to-one, es decir, se selecciona
 el mejor entre el padre y el hijo.
@@ -686,7 +686,6 @@ function rand_one(current_idx, pop, mut):
     candidate = a + mut * (b - c)
     return np.clip(candidate, 0, 1)
 
-
 function current_to_best_one(best_idx, current_idx, pop, mut):
     indices = permutation(length(pop))[0:2]
     a, b = pop[indices]
@@ -705,7 +704,7 @@ $r1, r2, r3$ son tres indices seleccionados aleatoriamente de la población actu
 $V_{i, G}=X_{i, G}+F \cdot\left(X_{best, G}-X_{i, G}\right)+F \cdot\left(X_{r 1, G}-X_{r 2, G}\right)$.
 De nuevo, los indices se calculan de manera aleatoria sin reemplazo (contando el índice del individuo
 actual). En este caso, utilizamos también el mejor individuo encontrado hasta el momento a la
-hora de generar el nuevo individuo.
+hora de generar el mutante.
 
 
 Algoritmo de comparación
@@ -841,18 +840,16 @@ paralelo, etc. En cualquier momento podemos acceder a la ayuda con
 **-h**.
 
 ``` {.bash caption="Salida de la página de ayuda"}
-python3 practica2.py -h
-usage: practica2.py [-h] [--seed SEED] [--n_jobs {1,2,3,4}] [--trace]
+usage: practica3.py [-h] [--seed SEED] [--n_jobs {1,2,3,4}] [--trace]
                     [--to_excel]
                     dataset
-                    {knn,relief,local-search,
-                    agg-blx,agg-ca,age-blx,age-ca,
-                    AM-(1,1.0),AM-(1,0.1),AM-(1,0.1mej)}
+                    {knn,relief,local-search,agg-blx,agg-ca,age-blx,age-ca,AM-1,1.0),AM-(1,0.1),AM-(1,0.1mej,ils,anneal,de/rand/one,de/current-to-best/one}
 
 positional arguments:
   dataset               Predefined datasets or a csv file
   {knn,relief,local-search,agg-blx,agg-ca,age-blx,age-ca,
-    AM-(1,1.0),AM-(1,0.1),AM-(1,0.1mej)} Algorithm to use for feature weighting
+   AM-(1,1.0),AM-(1,0.1),AM-(1,0.1mej),
+   ils,anneal,de/rand/one,de/current-to-best/one} Algorithm to use for feature weighting
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -864,26 +861,27 @@ optional arguments:
   --to_excel            Dump results into xlsx file (default: False)
 ```
 
-Así, si queremos ejecutar el algoritmo de AM-(1,1.0) con el conjunto de
-datos Colposcopy, la semilla 1, y en paralelo, ejecutaríamos lo
+Así, si queremos ejecutar el algoritmo de DE/rand/one con el conjunto de
+datos Colposcopy, la semilla 1 y en paralelo, ejecutaríamos lo
 siguiente:
 
 ``` {caption="Salida del programa principal"}
-python3 practica2.py colposcopy 'AM-(1,1.0)' --seed=1 --n_jobs=4
+python3 practica3.py colposcopy 'de/rand/one' --seed=1 --n_jobs=4
 
-    COLPOSCOPY     |     AM-(1,1.0)      |  SEED = 1
+=======================================================
+    COLPOSCOPY     |     DE/RAND/ONE      |  SEED = 1
 =======================================================
              Accuracy  Reduction  Aggregation       Time
-Partition 1  0.694915   0.951613     0.823264  10.574860
-Partition 2  0.666667   0.935484     0.801075  10.933312
-Partition 3  0.631579   0.935484     0.783531  11.138601
-Partition 4  0.666667   0.935484     0.801075  10.324892
-Partition 5  0.719298   0.951613     0.835456   6.054140
+Partition 1  0.728814   0.935484     0.832149  19.988966
+Partition 2  0.578947   0.919355     0.749151  19.216186
+Partition 3  0.684211   0.919355     0.801783  18.852877
+Partition 4  0.649123   0.951613     0.800368  19.592415
+Partition 5  0.754386   0.951613     0.852999  12.315932
 
          Accuracy  Reduction  Aggregation       Time
-Mean     0.675825   0.941935     0.808880   9.805161
-Std.Dev  0.033090   0.008834     0.020479   2.120348
-Median   0.666667   0.935484     0.801075  10.574860
+Mean     0.679096   0.935484     0.807290  17.993275
+Std.Dev  0.069092   0.016129     0.039261   3.201823
+Median   0.684211   0.935484     0.801783  19.216186
 ```
 
 > **NOTA:** La semilla por defecto es 77766814. Es la semilla utilizada
@@ -989,8 +987,8 @@ Empezamos hablando del conjunto de datos **Colposcopy.** Sin duda es el conjunto
 con menor tasa de clasificación y reducción de los tres conjuntos.
 Para este caso vemos que el clasificador básico tiene una
 precisión muy próxima a la del resto de algoritmos. De hecho, supera
-en precisión a todos los algoritmos, excepto a ES y Relief. 
-Para este último, sorprendentemente, en ese conjunto la reducción es 
+en precisión a todos los algoritmos, excepto a ES y Relief.
+Para este último, sorprendentemente, en ese conjunto la reducción es
 considerable y la precisión se mantiene con respecto a 1-NN, por tanto, podríamos decir
 que funciona bastante bien para este dataset en concreto. Para el resto
 de algoritmos es importante recalcar una cosa. Para búsqueda local por ejemplo,
@@ -1001,16 +999,16 @@ vaya a generalizar mucho mejor que el clasificador 1-NN y el coste
 computacional de predecir nuevos valores se va a reducir drásticamente.
 El inconveniente principal de estos algoritmos en este conjunto de datos
 (y en general), es el tiempo de ejecución. Para obtener los pesos
-correspondientes tarda de media \~8s (búsqueda local), 
+correspondientes tarda de media \~8s (búsqueda local),
 lo cuál es bastante mayor que los otros dos algoritmos comparados aunque no es un tiempo desmesurado.
-Algo similar pasa con los algoritmos evolutivos. Fijándonos ahora en 
+Algo similar pasa con los algoritmos evolutivos. Fijándonos ahora en
 el fitness, los algoritmos genéticos, los estacionarios y los generacionales
 tienen tasas de agregación similares. El único que destaca es AGG-BLX,
 pero ni siquiera supera a la búsqueda local.
 Podríamos decir que los los genéticos no funcionan bien en ese conjunto.
 Otro inconveniente principal
 es el tiempo que tarda en ejecutarse. Son los algoritmos más lentos.
-Por otro lado, el algoritmo AM-(1,1.0) tiene un fitness superior a 
+Por otro lado, el algoritmo AM-(1,1.0) tiene un fitness superior a
 la búsqueda local y tarda unos pocos segundos menos que el algoritmo
 genético más rápido. En cualquiera de los casos,
 no merece la pena la mejora respecto a BL para el tiempo de ejecución
@@ -1031,11 +1029,16 @@ evolutivos y los basados en trayectorias, superan o igualan a la búsqueda local
 Aunque que para Texture, la búsqueda local supera a los algoritmos genéticos y meméticos.
 Fijándonos en la tabla general y tomando como referencia los tres conjuntos de datos,
 dentro de los algoritmos evolutivos, el mejor relación fitness-tiempo
-sería el algoritmo AM-(1,1.0). Este algoritmo suele tener tasas de 
+sería el algoritmo AM-(1,1.0). Este algoritmo suele tener tasas de
 agregación de las mas altas, y un tiempo de cómputo de los más bajos.
 Desgraciadamente, los algoritmos evolutivos aquí implementados se quedan
 un poco atrás con respecto a la búsqueda local. La mejora es mínima mientras
 que el tiempo de cómputo se dispara.
+
+Para el conjunto **Texture** tenemos que ninguno de los algoritmos genéticos ni meméticos
+supera a la búsqueda local. Los únicos que la superan son los últimos algoritmos implementados,
+ILS, ES y DE, exceptuando DE/current-to-best/ que como comentamos antes, parece no funcionar
+bien en ninguún conjunto de datos.
 
 En general, los algoritmos ILS, DE y ES superan en la mayoría de los casos
 al resto de algoritmos. El único que parece no funcionar bien en ningún
@@ -1077,7 +1080,7 @@ Lo importante de los algoritmos de APC que estamos implementado es que
 una vez calculado los pesos óptimos para un conjunto de datos, se
 validan, y quedan prefijados para el resto del desarrollo. Esto hace que
 en fases posteriores, realizar predicciones sea mucho más eficiente.
-Por otra parte, si nuestro objetivo es la inferencia, 
+Por otra parte, si nuestro objetivo es la inferencia,
 podemos saber que características tienen más importancia que
 otras cuando nos enfrentamos a algoritmos de aprendizaje "black-box",
 los cuales son difíciles de interpretar, pero con estos métodos podemos
@@ -1096,7 +1099,7 @@ de estos algoritmos que sea escalable para problemas reales
 con espacios dimensionales más grandes que los aquí utilizados, puede
 ser una buena estrategia para reducir la dimensionalidad del problema,
 mejorar la eficiencia en predicciones, interpretar modelos "black-box" o
-reducir la varianza. En concreto, los algoritmos que yo implementaría para 
+reducir la varianza. En concreto, los algoritmos que yo implementaría para
 una solución eficiente y robusta serían DE y ES, ya que de por sí dan unos buenos
 resultados. Aunque se podrían investigar también algunos operadores para los algoritmos
 genéticos y meméticos para mejorar su comportamiento. Y en el caso de que nuestro
@@ -1108,16 +1111,18 @@ Convergencia
 
 Uno de los aspectos que yo considero relevante para el análisis de un
 algoritmo es la convergencia. A continuación se mostrarán unos gráficos
-de las trazas de los diferentes algoritmos. Para búsqueda local se ha
-utilizado el valor fitness de la solución, mientras que en los
-evolutivos, la traza corresponde al fitness del mejor individuo de la
-población a lo largo de las generaciones.
+de las trazas de los diferentes algoritmos para el conjunto *Ionosphere*.
+Para búsqueda local se ha utilizado el valor fitness de la solución, para los
+evolutivos (incluido DE), la traza corresponde al fitness del mejor individuo de la
+población a lo largo de las generaciones. Para ES se ha utilizado la mejor
+solución en cada enfriamiento, y para ILS se han concatenado las trazas de las
+las búsquedas locales a lo largo de las iteraciones.
 
-![Convergencia Algoritmos (1)](./img/traces1.jpg)
+![Convergencia de Algoritmos (1)](./img/traces1.jpg)
 
-![Convergencia Algoritmos (1)](./img/traces2.jpg)
+![Convergencia de Algoritmos (2)](./img/traces2.jpg)
 
-![Convergencia Algoritmos (1)](./img/traces3.jpg)
+![Convergencia de Algoritmos (3)](./img/traces3.jpg)
 
 Estos gráficos reflejan la relevancia de las particiones en los
 conjuntos de datos. Como vemos, el valor de la función fitness aumenta
@@ -1179,6 +1184,21 @@ el otro algoritmo, rand/one, parece ser el algoritmo menos sensible a las partic
 valores fitness muy próximos, a la vez que altos, en todas las particiones. Esto indica que es
 un algoritmo muy robusto.
 
+En el siguiente gráfico podemos también ver como descenciende el valor de la temperatura
+para ES a lo largo de las iteraciones (bucle externo).
+
+![Temperatura vs Iteraciones para ES](./img/temperatura_es.png)
+
+Se ve claramente como la forma en la que desciende la temperatura no depende de las particiones.
+Puesto que para todas ellas el valor desciende igual, de hecho, en la imagen no se puede
+apreciar ninguna diferencia. El motivo principal está en el cálculo de la temperatura inicial.
+Como esta depende del valor fitness del punto de inicio, y se utiliza la misma semilla para cada partición,
+todas las particiones tienen el mismo punto de inicio y por tanto el mismo fitness inicial.
+Aunque cada partición tiene una función fitness asociada distinta, los datos se dividen de manera estratificada
+y del mismo tamaño cada partición, lo que hace que una misma solución (vector de pesos) en diferentes particiones
+tenga valores fitness similares.
+
+
 Análisis de tiempos
 -------------------
 
@@ -1210,7 +1230,7 @@ del profiler.
 
 Como era de esperar, en todos los casos donde se pasa la mayor parte del
 tiempo es en la función fitness. Para Búsqueda local, el porcentaje es
-aún mayor, mientras que para los algoritmos evolutivo también hay una
+aún mayor, mientras que para los algoritmos evolutivos (incluido DE) también hay una
 parte del tiempo que se emplea en la mutación, cruce y el resto de
 operadores. Pero realmente, la diferencia principal de tiempos recae en
 el número de evaluaciones. Para Búsqueda local, el criterio de parada
@@ -1218,7 +1238,13 @@ hace que nunca lleguemos a evaluar los 15000 vecinos, mientras que con
 los algoritmos evolutivos esto siempre pasa. Si los algoritmos
 evolutivos se ejecutasen con el mismo número de evaluaciones (efectivas)
 que el algoritmo de búsqueda local, las diferencia de tiempo sería mucho
-menor.
+menor. Lo mismo pasa con ES, al converger rápido se evalúan pocas
+veces la función fitness, haciendo que el algoritmo sea muy rápido.
+Prueba de esto es ILS, el algoritmo como tal solo tiene que realizar una mutación
+y ejecutar búsqueda local. El porcentaje del tiempo que se pasa en el propio
+algoritmo es despreciable comparado con el tiempo que pasa ejecutando la búsqueda local.
+Sin embargo, este algoritmo es más lento que la búsqueda local y ES porque se le obliga
+a evaluar 15000 veces la función fitness.
 
 También decir que como hemos visto antes, hay una parte irreducible del
 tiempo. Que es el tiempo que dedica el algoritmo a los distintos
@@ -1232,7 +1258,13 @@ el resto de algoritmos evolutivos. Como únicamente seleccionan dos
 hijos, las evaluaciones se disminuyen y aumenta enormemente el número de
 generaciones. Por ese motivo, prácticamente la mitad del tiempo se
 consume en copiar y operar con los individuos que en la evaluación del
-fitness.
+fitness. En el caso de DE por ejemplo, vemos como es un algoritmo
+que rápidamente converge en soluciones muy buenas (véase la figura 5)
+lo que hace que el tiempo de fitness se reduzca, porque se eliminan
+muchas características. Pero existe una parte del tiempo irreducible que es
+la de aplicar la estrategia de mutación. Por muy bueno que sea el algoritmo,
+siempre se va a realizar el mismo número de mutaciones, lo que hace siempre
+se consuma ese tiempo irreducible.
 
 Otro factor también a tener en cuenta, es que los algoritmos evolutivos
 priorizan la **exploración** sobre la explotación. Si recordamos,
@@ -1249,16 +1281,16 @@ tenga una reducción más alta.
 
 Por estos motivos, podemos concluir, para estos conjuntos de datos, que
 los algoritmos genéticos son los más lentos. Seguidos de
-los meméticos y de la Búsqueda local (en dicho orden). Los
+los meméticos, ILS, DE, Búsqueda local y ES (en dicho orden). Los
 algoritmos meméticos son más rápidos que los genéticos porque eliminan
 parte de ese tiempo irreducible de aplicar mutación, cruce, etc. Y
 consume más tiempo en la parte de búsqueda local, que como bien sabemos
 es bastante eficiente.
 
 > NOTA: Por tiempo irreducible se entiende aquel que no está relacionado
-directamente con la evaluacion. Es obvio que se puede optimizar esa
+directamente con la evaluación. Es obvio que se puede optimizar esa
 parte del código, pero viendo el profiling, sabemos que el objetivo
-a optimizar es la función fitness. Lo llamamos irreducible porque 
+a optimizar es la función fitness. Lo llamamos irreducible porque
 no se puede eliminar. Por muy óptimo que sea dicha parte, siempre
 va a acarrear tiempo de cómputo extra comparado con la búsqueda
 local.
@@ -1273,7 +1305,7 @@ Entendimiento
 Al principio, pese a lo básico del algoritmo, no llegaba a comprender
 como funcionaba realmente Relief. Este paper me fue de gran ayuda:
 
-[RELIEF Algorithm and Similarity Learning for 
+[RELIEF Algorithm and Similarity Learning for
 K-NN](https://www.academia.edu/2675771/RELIEF_Algorithm_and_Similarity_Learning_for_k-NN)
 
 Implementación

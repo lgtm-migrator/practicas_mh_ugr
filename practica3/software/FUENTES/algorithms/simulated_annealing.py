@@ -44,7 +44,6 @@ def annealing(X, y, max_eval, seed):
         accepted = 0
         current_evals = 0
         while current_evals < max_neighbours and accepted < max_accepted:
-            print(evaluations)
             trace[evaluations] = best_fitness
             current_evals += 1
             w_prime = mutate(weights)
