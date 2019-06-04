@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Relief &mdash; documentación de Metaheurísticas 2019 - Práctica 2</title>
+  <title>Búsqueda Local Reiterada &mdash; documentación de Metaheurísticas 2019 - Práctica 3</title>
   
 
   
@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Índice" href="genindex.html" />
     <link rel="search" title="Búsqueda" href="search.html" />
-    <link rel="next" title="Genéticos y Meméticos" href="evolutionary/genetics.html" />
-    <link rel="prev" title="Búsqueda Local" href="local_search.html" /> 
+    <link rel="next" title="Evolución diferencial" href="de.html" />
+    <link rel="prev" title="Búsqueda Local" href="anneal.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -81,15 +81,18 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Contenido:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Instalación</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="local_search.html">Búsqueda Local</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Relief</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relief.html">Relief</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evolutionary/genetics.html">Genéticos y Meméticos</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evolutionary/operators.html">Operadores genéticos</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evolutionary/strategies.html">Estrategias</a></li>
+<li class="toctree-l1"><a class="reference internal" href="anneal.html">Búsqueda Local</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Búsqueda Local Reiterada</a></li>
+<li class="toctree-l1"><a class="reference internal" href="de.html">Evolución diferencial</a></li>
 </ul>
 
             
@@ -135,13 +138,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Relief</li>
+      <li>Búsqueda Local Reiterada</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/relief.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/ils.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -154,31 +157,63 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-algorithms.relief">
-<span id="relief"></span><h1>Relief<a class="headerlink" href="#module-algorithms.relief" title="Enlazar permanentemente con este título">¶</a></h1>
-<p>Para el algoritmo de comparación, se ha implementado el algoritmo
-greedy Relief. Este algoritmo es el siguiente:</p>
+  <div class="section" id="module-algorithms.ils">
+<span id="busqueda-local-reiterada"></span><h1>Búsqueda Local Reiterada<a class="headerlink" href="#module-algorithms.ils" title="Enlazar permanentemente con este título">¶</a></h1>
 <dl class="function">
-<dt id="algorithms.relief._relief">
-<code class="descclassname">algorithms.relief.</code><code class="descname">_relief</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/relief.html#_relief"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.relief._relief" title="Enlazar permanentemente con esta definición">¶</a></dt>
-<dd><p>Relief algorithm.</p>
+<dt id="algorithms.ils.ils">
+<code class="descclassname">algorithms.ils.</code><code class="descname">ils</code><span class="sig-paren">(</span><em>X</em>, <em>y</em>, <em>iters</em>, <em>seed</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/ils.html#ils"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.ils.ils" title="Enlazar permanentemente con esta definición">¶</a></dt>
+<dd><p>Iterated local search algorithm.</p>
+<p>It performs ILS with a limit of 1000 neighbours
+generated per iteration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parámetros</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> – Train input data</p></li>
-<li><p><strong>Y</strong> – Train label data</p></li>
+<li><p><strong>X</strong> – Input data for fitness evaluation</p></li>
+<li><p><strong>y</strong> – Input labels for fitness evaluation</p></li>
+<li><p><strong>iters</strong> – The number of iterations. Also the number
+of application of Local search algorithms.</p></li>
+<li><p><strong>seed</strong> – Seed to feed the random number generator.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
-<p>Como el resto de algoritmos, está envuelto en una clase para su integración
-con el script principal:</p>
+<dl class="function">
+<dt id="algorithms.ils.mutate">
+<code class="descclassname">algorithms.ils.</code><code class="descname">mutate</code><span class="sig-paren">(</span><em>weights</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/ils.html#mutate"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.ils.mutate" title="Enlazar permanentemente con esta definición">¶</a></dt>
+<dd><p>Mutation function for ILS.</p>
+<p>It selects randomly 10 percent of the weights
+and mutates it using Gaussian mutation with
+sigma = 0.4.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros</dt>
+<dd class="field-odd"><p><strong>weights</strong> – Candidate to apply the mutation</p>
+</dd>
+<dt class="field-even">Devuelve</dt>
+<dd class="field-even"><p>a new candidate</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="class">
-<dt id="algorithms.relief.Relief">
-<em class="property">class </em><code class="descclassname">algorithms.relief.</code><code class="descname">Relief</code><span class="sig-paren">(</span><em>threshold=0.2</em>, <em>seed=77766814</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/relief.html#Relief"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.relief.Relief" title="Enlazar permanentemente con esta definición">¶</a></dt>
-<dd><p>Wrapper class for Relief algorithm that provided
+<dt id="algorithms.ils.ILS">
+<em class="property">class </em><code class="descclassname">algorithms.ils.</code><code class="descname">ILS</code><span class="sig-paren">(</span><em>threshold=0.2</em>, <em>iterations=15</em>, <em>seed=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/ils.html#ILS"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.ils.ILS" title="Enlazar permanentemente con esta definición">¶</a></dt>
+<dd><p>Wrapper class for Local Search algorithm that provided
 sklearn-based syntax.</p>
+<dl class="method">
+<dt id="algorithms.ils.ILS.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/ils.html#ILS.fit"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.ils.ILS.fit" title="Enlazar permanentemente con esta definición">¶</a></dt>
+<dd><p>Fit the a 1-NN model using Iterated Local Search for feature weighting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> – Train inputs</p></li>
+<li><p><strong>y</strong> – Train labels</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -191,10 +226,10 @@ sklearn-based syntax.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="evolutionary/genetics.html" class="btn btn-neutral float-right" title="Genéticos y Meméticos" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="de.html" class="btn btn-neutral float-right" title="Evolución diferencial" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="local_search.html" class="btn btn-neutral float-left" title="Búsqueda Local" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="anneal.html" class="btn btn-neutral float-left" title="Búsqueda Local" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

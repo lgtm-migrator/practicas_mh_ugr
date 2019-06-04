@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Búsqueda Local &mdash; documentación de Metaheurísticas 2019 - Práctica 2</title>
+  <title>Búsqueda Local &mdash; documentación de Metaheurísticas 2019 - Práctica 3</title>
   
 
   
@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Índice" href="genindex.html" />
     <link rel="search" title="Búsqueda" href="search.html" />
-    <link rel="next" title="Relief" href="relief.html" />
-    <link rel="prev" title="Core" href="core.html" /> 
+    <link rel="next" title="Búsqueda Local Reiterada" href="ils.html" />
+    <link rel="prev" title="Estrategias" href="evolutionary/strategies.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -81,15 +81,18 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Contenido:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Instalación</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.html">Core</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Búsqueda Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="local_search.html">Búsqueda Local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="relief.html">Relief</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evolutionary/genetics.html">Genéticos y Meméticos</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evolutionary/operators.html">Operadores genéticos</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evolutionary/strategies.html">Estrategias</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Búsqueda Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ils.html">Búsqueda Local Reiterada</a></li>
+<li class="toctree-l1"><a class="reference internal" href="de.html">Evolución diferencial</a></li>
 </ul>
 
             
@@ -141,7 +144,7 @@
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/local_search.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/anneal.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -156,44 +159,50 @@
             
   <div class="section" id="module-algorithms.local_search">
 <span id="busqueda-local"></span><h1>Búsqueda Local<a class="headerlink" href="#module-algorithms.local_search" title="Enlazar permanentemente con este título">¶</a></h1>
-<p>Para el algoritmo de búsqueda local se han implementado dos
-elementos principales. El primero de ellos es el algoritmo en sí,
-que es el siguiente:</p>
 <dl class="function">
-<dt id="algorithms.local_search.local_search">
-<code class="descclassname">algorithms.local_search.</code><code class="descname">local_search</code><span class="sig-paren">(</span><em>X</em>, <em>y</em>, <em>max_neighbours</em>, <em>sigma</em>, <em>seed</em>, <em>init_weights=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/local_search.html#local_search"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.local_search.local_search" title="Enlazar permanentemente con esta definición">¶</a></dt>
-<dd><p>Local Search Algorithm</p>
+<dt id="algorithms.simulated_annealing.annealing">
+<code class="descclassname">algorithms.simulated_annealing.</code><code class="descname">annealing</code><span class="sig-paren">(</span><em>X</em>, <em>y</em>, <em>max_eval</em>, <em>seed</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/simulated_annealing.html#annealing"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.simulated_annealing.annealing" title="Enlazar permanentemente con esta definición">¶</a></dt>
+<dd><p>Simulated annealing algorithm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parámetros</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> – Train input</p></li>
-<li><p><strong>y</strong> – Train labels</p></li>
-<li><p><strong>max_neighbours</strong> – Max number of neighbours to explore.</p></li>
-<li><p><strong>sigma</strong> – Standard deviation of Gaussian mutation.</p></li>
-<li><p><strong>seed</strong> – Seed to initialize the random generator.
-It is recommended to specify this in order to replicate
-the experiment across executions.</p></li>
+<li><p><strong>X</strong> – Input data for fitness evaluation</p></li>
+<li><p><strong>y</strong> – Input labels for fitness evaluation</p></li>
+<li><p><strong>max_eval</strong> – Maximun number of fitness function evaluations.</p></li>
+<li><p><strong>seed</strong> – Seed to feed the random number generator.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
-<p>Y el segundo es una clase que envuelve el algoritmo para darle
-una sintaxis similar a los objetos de Sklearn. Esto permite la integración
-automática con el resto del código. LA clase en la siguiente:</p>
+<dl class="function">
+<dt id="algorithms.simulated_annealing.mutate">
+<code class="descclassname">algorithms.simulated_annealing.</code><code class="descname">mutate</code><span class="sig-paren">(</span><em>weights</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/simulated_annealing.html#mutate"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.simulated_annealing.mutate" title="Enlazar permanentemente con esta definición">¶</a></dt>
+<dd><p>Mutation function for Simulated Annealing.
+Also known as perturbation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros</dt>
+<dd class="field-odd"><p><strong>weights</strong> – Candidate to apply perturbation</p>
+</dd>
+<dt class="field-even">Devuelve</dt>
+<dd class="field-even"><p>a new candidate</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="class">
-<dt id="algorithms.local_search.LocalSearch">
-<em class="property">class </em><code class="descclassname">algorithms.local_search.</code><code class="descname">LocalSearch</code><span class="sig-paren">(</span><em>threshold=0.2</em>, <em>max_neighbours=15000</em>, <em>sigma=0.3</em>, <em>seed=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/local_search.html#LocalSearch"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.local_search.LocalSearch" title="Enlazar permanentemente con esta definición">¶</a></dt>
-<dd><p>Wrapper class for Local Search algorithm that provided
+<dt id="algorithms.simulated_annealing.SimulatedAnnealing">
+<em class="property">class </em><code class="descclassname">algorithms.simulated_annealing.</code><code class="descname">SimulatedAnnealing</code><span class="sig-paren">(</span><em>threshold=0.2</em>, <em>max_evaluations=15000</em>, <em>seed=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/simulated_annealing.html#SimulatedAnnealing"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.simulated_annealing.SimulatedAnnealing" title="Enlazar permanentemente con esta definición">¶</a></dt>
+<dd><p>Wrapper class for Simulated Annealing algorithm that provided
 sklearn-based syntax.</p>
 <dl class="method">
-<dt id="algorithms.local_search.LocalSearch.fit">
-<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/local_search.html#LocalSearch.fit"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.local_search.LocalSearch.fit" title="Enlazar permanentemente con esta definición">¶</a></dt>
-<dd><p>Fit the a 1-NN model using Local search for feature weighting.</p>
+<dt id="algorithms.simulated_annealing.SimulatedAnnealing.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/algorithms/simulated_annealing.html#SimulatedAnnealing.fit"><span class="viewcode-link">[fuente]</span></a><a class="headerlink" href="#algorithms.simulated_annealing.SimulatedAnnealing.fit" title="Enlazar permanentemente con esta definición">¶</a></dt>
+<dd><p>Fit the a 1-NN model using Simulated Annealing for feature weighting.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parámetros</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> – Train inputs</p></li>
+<li><p><strong>X</strong> – Train input</p></li>
 <li><p><strong>y</strong> – Train labels</p></li>
 </ul>
 </dd>
@@ -212,10 +221,10 @@ sklearn-based syntax.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="relief.html" class="btn btn-neutral float-right" title="Relief" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="ils.html" class="btn btn-neutral float-right" title="Búsqueda Local Reiterada" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="core.html" class="btn btn-neutral float-left" title="Core" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="evolutionary/strategies.html" class="btn btn-neutral float-left" title="Estrategias" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

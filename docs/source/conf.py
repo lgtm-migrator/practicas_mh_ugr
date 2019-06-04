@@ -14,7 +14,7 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../../practica2/software/FUENTES/'))
+sys.path.insert(0, os.path.abspath('../../practica3/software/FUENTES/'))
 
 # -- Project information -----------------------------------------------------
 
@@ -23,7 +23,7 @@ copyright = '2019, Antonio Molner Domenech'
 author = 'Antonio Molner Domenech'
 
 # The full version, including alpha/beta/rc tags
-release = u'Práctica 2'
+release = u'Práctica 3'
 
 
 # -- General configuration ---------------------------------------------------
