@@ -20,7 +20,7 @@ def local_search(X,
                  It is recommended to specify this in order to replicate
                  the experiment across executions.
     :param early_stopping: Whether or not to stop the algorithm after generate
-    20*N neighbours without improvement.
+                           20*N neighbours without improvement.
     """
     n_features = X.shape[1]
     if seed:
