@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>algorithms.local_search &mdash; documentación de Metaheurísticas 2019 - Práctica 2</title>
+  <title>algorithms.local_search &mdash; documentación de Metaheurísticas 2019 - Práctica 3</title>
   
 
   
@@ -79,7 +79,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Contenido:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Instalación</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../core.html">Core</a></li>
@@ -88,6 +88,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../../evolutionary/genetics.html">Genéticos y Meméticos</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../evolutionary/operators.html">Operadores genéticos</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../evolutionary/strategies.html">Estrategias</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anneal.html">Búsqueda Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ils.html">Búsqueda Local Reiterada</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../de.html">Evolución diferencial</a></li>
 </ul>
 
             
@@ -155,7 +158,13 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 
-<div class="viewcode-block" id="local_search"><a class="viewcode-back" href="../../local_search.html#algorithms.local_search.local_search">[documentos]</a><span class="k">def</span> <span class="nf">local_search</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">max_neighbours</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">init_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="local_search"><a class="viewcode-back" href="../../local_search.html#algorithms.local_search.local_search">[documentos]</a><span class="k">def</span> <span class="nf">local_search</span><span class="p">(</span><span class="n">X</span><span class="p">,</span>
+                 <span class="n">y</span><span class="p">,</span>
+                 <span class="n">max_neighbours</span><span class="p">,</span>
+                 <span class="n">sigma</span><span class="p">,</span>
+                 <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">init_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">early_stopping</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Local Search Algorithm</span>
 
@@ -166,9 +175,12 @@
 <span class="sd">    :param seed: Seed to initialize the random generator.</span>
 <span class="sd">                 It is recommended to specify this in order to replicate</span>
 <span class="sd">                 the experiment across executions.</span>
+<span class="sd">    :param early_stopping: Whether or not to stop the algorithm after generate</span>
+<span class="sd">                           20*N neighbours without improvement.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">n_features</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">seed</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">init_weights</span><span class="p">):</span>
         <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">init_weights</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -193,7 +205,8 @@
                 <span class="k">break</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">w_prime</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">last_state</span>
-            <span class="k">if</span> <span class="n">n_generated</span> <span class="o">&gt;</span> <span class="n">max_neighbours</span> <span class="ow">or</span> <span class="n">no_improvement</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">20</span> <span class="o">*</span> <span class="n">n_features</span><span class="p">):</span>
+            <span class="n">early_stop</span> <span class="o">=</span> <span class="n">early_stopping</span> <span class="ow">and</span> <span class="n">no_improvement</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">20</span> <span class="o">*</span> <span class="n">n_features</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">n_generated</span> <span class="o">&gt;</span> <span class="n">max_neighbours</span> <span class="ow">or</span> <span class="n">early_stop</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">weights</span><span class="p">,</span> <span class="n">trace</span><span class="p">[</span><span class="n">trace</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">],</span> <span class="n">n_generated</span>
     <span class="n">trace</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">fitness</span>
     <span class="k">return</span> <span class="n">weights</span><span class="p">,</span> <span class="n">trace</span><span class="p">[</span><span class="n">trace</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">],</span> <span class="n">n_generated</span></div>
@@ -208,7 +221,6 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">max_neighbours</span><span class="o">=</span><span class="mi">15000</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_neighbours</span> <span class="o">=</span> <span class="n">max_neighbours</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">trace</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">neighbors_generated</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>

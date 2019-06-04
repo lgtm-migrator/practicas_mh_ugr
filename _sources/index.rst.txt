@@ -1,8 +1,3 @@
-.. Prácticas Metaheurísticas 2019 documentation master file, created by
-   sphinx-quickstart on Sun May  5 19:32:33 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Bienvenido a la documentación de las prácticas!
 ===============================================
 
@@ -11,7 +6,7 @@ de la asignatura Metaheurísticas UGR 2019.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Contenido:
    :hidden:
 
    installation
@@ -21,6 +16,9 @@ de la asignatura Metaheurísticas UGR 2019.
    evolutionary/genetics
    evolutionary/operators
    evolutionary/strategies
+   anneal
+   ils
+   de
 
 
 * **Manual de usuario:**
@@ -30,7 +28,7 @@ de la asignatura Metaheurísticas UGR 2019.
 
 * **Algoritmos básicos:**
 
-  * :doc:`Búsqueda local <local_search>`
+  * :doc:`Búsqueda Local <local_search>`
   * :doc:`Relief <relief>`
 
 * **Algoritmos evolutivos:**
@@ -39,8 +37,14 @@ de la asignatura Metaheurísticas UGR 2019.
   * :doc:`Operadores <evolutionary/operators>`
   * :doc:`Estrategias <evolutionary/strategies>`
 
+* **Algoritmos basados en trayectorias:**
 
-Indices y tablas
+  * :doc:`Enfriamiento Simulado <anneal>`
+  * :doc:`Búsqueda Local Reiterada <ils>`
+  * :doc:`Evolución Diferencial <de>`
+
+
+Índices y tablas
 ================
 
 * :ref:`genindex`

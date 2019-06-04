@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="es" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="es" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>algorithms.simulated_annealing &mdash; documentación de Metaheurísticas 2019 - Práctica 3</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../_static/translations.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Índice" href="../../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Metaheurísticas 2019
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contenido:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Instalación</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../local_search.html">Búsqueda Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../relief.html">Relief</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../evolutionary/genetics.html">Genéticos y Meméticos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../evolutionary/operators.html">Operadores genéticos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../evolutionary/strategies.html">Estrategias</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anneal.html">Búsqueda Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ils.html">Búsqueda Local Reiterada</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../de.html">Evolución diferencial</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Metaheurísticas 2019</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Código de módulo</a> &raquo;</li>
+        
+      <li>algorithms.simulated_annealing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Código fuente para algorithms.simulated_annealing</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.core</span> <span class="k">import</span> <span class="n">evaluate</span><span class="p">,</span> <span class="n">AlgorithmBase</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="mutate"><a class="viewcode-back" href="../../anneal.html#algorithms.simulated_annealing.mutate">[documentos]</a><span class="k">def</span> <span class="nf">mutate</span><span class="p">(</span><span class="n">weights</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mutation function for Simulated Annealing.</span>
+<span class="sd">    Also known as perturbation.</span>
+
+<span class="sd">    :param weights: Candidate to apply perturbation</span>
+<span class="sd">    :returns: a new candidate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">candidate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">))</span>
+    <span class="n">perturbation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">candidate</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">candidate</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">+</span> <span class="n">perturbation</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">candidate</span></div>
+
+
+<div class="viewcode-block" id="annealing"><a class="viewcode-back" href="../../anneal.html#algorithms.simulated_annealing.annealing">[documentos]</a><span class="k">def</span> <span class="nf">annealing</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">max_eval</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simulated annealing algorithm.</span>
+
+<span class="sd">    :param X: Input data for fitness evaluation</span>
+<span class="sd">    :param y: Input labels for fitness evaluation</span>
+<span class="sd">    :param max_eval: Maximun number of fitness function evaluations.</span>
+<span class="sd">    :param seed: Seed to feed the random number generator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">best_weights</span> <span class="o">=</span> <span class="n">weights</span>
+    <span class="n">fitness</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">best_weights</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">best_fitness</span> <span class="o">=</span> <span class="n">fitness</span>
+    <span class="n">T0</span> <span class="o">=</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">best_fitness</span> <span class="o">/</span> <span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.3</span><span class="p">))</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">T0</span>
+    <span class="n">Tf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">T0</span><span class="p">)</span>
+    <span class="n">evaluations</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">accepted</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">max_neighbours</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+    <span class="n">max_accepted</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">max_eval</span> <span class="o">/</span> <span class="n">max_neighbours</span>
+    <span class="n">trace</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">max_eval</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">evaluations</span> <span class="o">&lt;</span> <span class="n">max_eval</span> <span class="ow">and</span> <span class="n">accepted</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">T</span> <span class="o">&gt;</span> <span class="n">Tf</span><span class="p">:</span>
+        <span class="n">accepted</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">current_evals</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">current_evals</span> <span class="o">&lt;</span> <span class="n">max_neighbours</span> <span class="ow">and</span> <span class="n">accepted</span> <span class="o">&lt;</span> <span class="n">max_accepted</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">evaluations</span><span class="p">)</span>
+            <span class="n">trace</span><span class="p">[</span><span class="n">evaluations</span><span class="p">]</span> <span class="o">=</span> <span class="n">best_fitness</span>
+            <span class="n">current_evals</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">w_prime</span> <span class="o">=</span> <span class="n">mutate</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+            <span class="n">fitness_prime</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">w_prime</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">fitness_prime</span> <span class="o">-</span> <span class="n">fitness</span>
+            <span class="n">prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">diff</span> <span class="o">/</span> <span class="n">T</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">diff</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">prob</span><span class="p">:</span>
+                <span class="n">weights</span> <span class="o">=</span> <span class="n">w_prime</span>
+                <span class="n">fitness</span> <span class="o">=</span> <span class="n">fitness_prime</span>
+                <span class="n">accepted</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">fitness</span> <span class="o">&gt;</span> <span class="n">best_fitness</span><span class="p">:</span>
+                    <span class="n">best_fitness</span> <span class="o">=</span> <span class="n">fitness</span>
+                    <span class="n">best_weights</span> <span class="o">=</span> <span class="n">weights</span>
+        <span class="n">evaluations</span> <span class="o">+=</span> <span class="n">current_evals</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="p">(</span><span class="n">T0</span> <span class="o">-</span> <span class="n">Tf</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">M</span> <span class="o">*</span> <span class="n">T0</span> <span class="o">*</span> <span class="n">Tf</span><span class="p">)</span>
+        <span class="n">T</span> <span class="o">=</span> <span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">T</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">best_weights</span><span class="p">,</span> <span class="n">trace</span><span class="p">[</span><span class="n">trace</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="SimulatedAnnealing"><a class="viewcode-back" href="../../anneal.html#algorithms.simulated_annealing.SimulatedAnnealing">[documentos]</a><span class="k">class</span> <span class="nc">SimulatedAnnealing</span><span class="p">(</span><span class="n">AlgorithmBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper class for Simulated Annealing algorithm that provided</span>
+<span class="sd">    sklearn-based syntax.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">max_evaluations</span><span class="o">=</span><span class="mi">15000</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_evaluations</span> <span class="o">=</span> <span class="n">max_evaluations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trace</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SimulatedAnnealing.fit"><a class="viewcode-back" href="../../anneal.html#algorithms.simulated_annealing.SimulatedAnnealing.fit">[documentos]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit the a 1-NN model using Simulated Annealing for feature weighting.</span>
+
+<span class="sd">        :param X: Train input</span>
+<span class="sd">        :param y: Train labels</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">weights</span><span class="p">,</span> <span class="n">trace</span> <span class="o">=</span> <span class="n">annealing</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_evaluations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trace</span> <span class="o">=</span> <span class="n">trace</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_feature_importances</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Antonio Molner Domenech
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

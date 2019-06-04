@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Índice &mdash; documentación de Metaheurísticas 2019 - Práctica 2</title>
+  <title>Índice &mdash; documentación de Metaheurísticas 2019 - Práctica 3</title>
   
 
   
@@ -80,7 +80,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Contenido:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Instalación</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core.html">Core</a></li>
@@ -89,6 +89,9 @@
 <li class="toctree-l1"><a class="reference internal" href="evolutionary/genetics.html">Genéticos y Meméticos</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evolutionary/operators.html">Operadores genéticos</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evolutionary/strategies.html">Estrategias</a></li>
+<li class="toctree-l1"><a class="reference internal" href="anneal.html">Búsqueda Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ils.html">Búsqueda Local Reiterada</a></li>
+<li class="toctree-l1"><a class="reference internal" href="de.html">Evolución diferencial</a></li>
 </ul>
 
             
@@ -158,8 +161,10 @@
  <a href="#_"><strong>_</strong></a>
  | <a href="#A"><strong>A</strong></a>
  | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
+ | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#R"><strong>R</strong></a>
@@ -182,17 +187,23 @@
 </li>
       <li><a href="core.html#module-algorithms.core">algorithms.core (módulo)</a>
 </li>
+      <li><a href="de.html#module-algorithms.differential_evolution">algorithms.differential_evolution (módulo)</a>
+</li>
       <li><a href="evolutionary/genetics.html#module-algorithms.evolutionary">algorithms.evolutionary (módulo)</a>
+</li>
+      <li><a href="evolutionary/operators.html#module-algorithms.evolutionary.operators">algorithms.evolutionary.operators (módulo)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="evolutionary/operators.html#module-algorithms.evolutionary.operators">algorithms.evolutionary.operators (módulo)</a>
-</li>
       <li><a href="evolutionary/strategies.html#module-algorithms.evolutionary.strategies">algorithms.evolutionary.strategies (módulo)</a>
 </li>
-      <li><a href="local_search.html#module-algorithms.local_search">algorithms.local_search (módulo)</a>
+      <li><a href="ils.html#module-algorithms.ils">algorithms.ils (módulo)</a>
+</li>
+      <li><a href="anneal.html#module-algorithms.local_search">algorithms.local_search (módulo)</a>, <a href="local_search.html#module-algorithms.local_search">[1]</a>
 </li>
       <li><a href="relief.html#module-algorithms.relief">algorithms.relief (módulo)</a>
+</li>
+      <li><a href="anneal.html#algorithms.simulated_annealing.annealing">annealing() (en el módulo algorithms.simulated_annealing)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -210,9 +221,23 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="evolutionary/strategies.html#algorithms.evolutionary.strategies.crossover_and_mutate">crossover_and_mutate() (en el módulo algorithms.evolutionary.strategies)</a>
 </li>
+      <li><a href="de.html#algorithms.differential_evolution.current_to_best_one">current_to_best_one() (en el módulo algorithms.differential_evolution)</a>
+</li>
       <li><a href="evolutionary/operators.html#algorithms.evolutionary.operators.cx_arithmetic">cx_arithmetic() (en el módulo algorithms.evolutionary.operators)</a>
 </li>
       <li><a href="evolutionary/operators.html#algorithms.evolutionary.operators.cx_blx">cx_blx() (en el módulo algorithms.evolutionary.operators)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="de.html#algorithms.differential_evolution.de">de() (en el módulo algorithms.differential_evolution)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="de.html#algorithms.differential_evolution.DifferentialEvolution">DifferentialEvolution (clase en algorithms.differential_evolution)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -238,11 +263,31 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="local_search.html#algorithms.local_search.LocalSearch.fit">fit() (método de algorithms.local_search.LocalSearch)</a>
+      <li><a href="de.html#algorithms.differential_evolution.DifferentialEvolution.fit">fit() (método de algorithms.differential_evolution.DifferentialEvolution)</a>
+
+      <ul>
+        <li><a href="ils.html#algorithms.ils.ILS.fit">(método de algorithms.ils.ILS)</a>
 </li>
+        <li><a href="local_search.html#algorithms.local_search.LocalSearch.fit">(método de algorithms.local_search.LocalSearch)</a>
+</li>
+        <li><a href="anneal.html#algorithms.simulated_annealing.SimulatedAnnealing.fit">(método de algorithms.simulated_annealing.SimulatedAnnealing)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="core.html#algorithms.core.AlgorithmBase.fit_transform">fit_transform() (método de algorithms.core.AlgorithmBase)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="ils.html#algorithms.ils.ILS">ILS (clase en algorithms.ils)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="ils.html#algorithms.ils.ils">ils() (en el módulo algorithms.ils)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -264,22 +309,30 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="evolutionary/strategies.html#algorithms.evolutionary.strategies.memetic_strategy">memetic_strategy() (en el módulo algorithms.evolutionary.strategies)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="evolutionary/genetics.html#algorithms.evolutionary.MemeticAlgorithm">MemeticAlgorithm (clase en algorithms.evolutionary)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="evolutionary/operators.html#algorithms.evolutionary.operators.mut_gaussian">mut_gaussian() (en el módulo algorithms.evolutionary.operators)</a>
 </li>
+      <li><a href="ils.html#algorithms.ils.mutate">mutate() (en el módulo algorithms.ils)</a>
+
+      <ul>
+        <li><a href="anneal.html#algorithms.simulated_annealing.mutate">(en el módulo algorithms.simulated_annealing)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="relief.html#algorithms.relief.Relief">Relief (clase en algorithms.relief)</a>
+      <li><a href="de.html#algorithms.differential_evolution.rand_one">rand_one() (en el módulo algorithms.differential_evolution)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="relief.html#algorithms.relief.Relief">Relief (clase en algorithms.relief)</a>
+</li>
       <li><a href="evolutionary/strategies.html#algorithms.evolutionary.strategies.run">run() (en el módulo algorithms.evolutionary.strategies)</a>
 </li>
   </ul></td>
@@ -289,6 +342,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="core.html#algorithms.core.AlgorithmBase.set_feature_importances">set_feature_importances() (método de algorithms.core.AlgorithmBase)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="anneal.html#algorithms.simulated_annealing.SimulatedAnnealing">SimulatedAnnealing (clase en algorithms.simulated_annealing)</a>
 </li>
   </ul></td>
 </tr></table>
