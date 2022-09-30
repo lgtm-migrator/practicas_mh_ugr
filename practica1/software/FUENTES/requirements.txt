@@ -1,4 +1,4 @@
-joblib==0.13.2
+joblib==1.2.0
 matplotlib
 numpy==1.16.2
 pandas==0.24.1
